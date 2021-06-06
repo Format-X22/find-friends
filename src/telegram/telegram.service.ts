@@ -2,15 +2,16 @@ import * as TelegramBot from 'node-telegram-bot-api';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { handlers } from './telegram.decorator';
 import { ConfigService } from '@nestjs/config';
-import { User } from '../user/user.schema';
+import { DEFAULT_STATE, User } from '../user/user.schema';
 import { UserService } from '../user/user.service';
+import { ModuleRef } from '@nestjs/core';
 
 @Injectable()
 export class TelegramService implements OnModuleInit {
     private readonly logger: Logger = new Logger(TelegramService.name);
     private bot: TelegramBot;
 
-    constructor(private configService: ConfigService, private userService: UserService) {}
+    constructor(private configService: ConfigService, private userService: UserService, private moduleRef: ModuleRef) {}
 
     onModuleInit(): void {
         this.bot = new TelegramBot(this.configService.get('FF_TG_KEY'), { polling: true });
@@ -30,7 +31,7 @@ export class TelegramService implements OnModuleInit {
         });
     }
 
-    async sendText(user: User, message: string, buttons: unknown): Promise<void> {
+    async sendText(user: User, message: string, buttons?: unknown): Promise<void> {
         // TODO Buttons
         await this.bot.sendMessage(user.chatId, message);
     }
@@ -92,8 +93,10 @@ export class TelegramService implements OnModuleInit {
 
     private async handleText(message: TelegramBot.Message): Promise<void> {
         const user: User = await this.userService.getUser(message);
+        const state: string = user.state || DEFAULT_STATE;
+        const [target, methodName]: [new () => object, string] = handlers.get(state);
 
-        // TODO -
+        this.moduleRef.get(target)[methodName](user);
     }
 
     private async handlePhoto(message: TelegramBot.Message): Promise<void> {

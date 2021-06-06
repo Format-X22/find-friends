@@ -1,4 +1,12 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Global, Module } from '@nestjs/common';
+import './options.scenario';
+import './pay.scenario';
+import './quest.scenario';
 
-@Module({})
+@Global()
+@Module({
+    imports: [],
+    providers: [],
+    exports: [],
+})
 export class GameModule {}

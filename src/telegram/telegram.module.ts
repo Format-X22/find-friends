@@ -1,12 +1,15 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { TelegramService } from './telegram.service';
 import './telegram.decorator';
-import { UserModule } from '../user/user.module';
-import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from '../user/user.schema';
+import { RootScenario } from '../game/root.scenario';
+import { PayScenario } from '../game/pay.scenario';
+import { QuestScenario } from '../game/quest.scenario';
+import { OptionsScenario } from '../game/options.scenario';
 
+@Global()
 @Module({
-    imports: [UserModule],
-    providers: [TelegramService],
+    imports: [],
+    providers: [TelegramService, RootScenario, PayScenario, QuestScenario, OptionsScenario],
+    exports: [TelegramService],
 })
 export class TelegramModule {}
