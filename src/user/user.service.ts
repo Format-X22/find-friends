@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import * as TelegramBot from 'node-telegram-bot-api';
-import { User } from './user.schema';
+import { User, UserDefination } from './user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
 @Injectable()
 export class UserService {
-    constructor(@InjectModel(User.name) private userModel: Model<User>) {}
+    constructor(@InjectModel(UserDefination.name) private userModel: Model<User>) {}
 
     async getUser(message: TelegramBot.Message): Promise<User> {
         await this.userModel.updateOne(

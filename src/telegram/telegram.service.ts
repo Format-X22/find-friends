@@ -5,6 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { DEFAULT_STATE, User } from '../user/user.schema';
 import { UserService } from '../user/user.service';
 import { ModuleRef } from '@nestjs/core';
+import { KeyboardButton } from 'node-telegram-bot-api';
+import { TelegramContext } from './telegram.context';
 
 @Injectable()
 export class TelegramService implements OnModuleInit {
@@ -31,9 +33,37 @@ export class TelegramService implements OnModuleInit {
         });
     }
 
-    async sendText(user: User, message: string, buttons?: unknown): Promise<void> {
-        // TODO Buttons
-        await this.bot.sendMessage(user.chatId, message);
+    async sendText(user: User, message: string, buttons?: Array<Array<string>> | false): Promise<void> {
+        const options: TelegramBot.SendMessageOptions = {};
+
+        if (buttons) {
+            const keyboard: Array<Array<KeyboardButton>> = buttons.map(
+                (row: Array<string>): Array<KeyboardButton> =>
+                    row.map(
+                        (text: string): KeyboardButton => ({
+                            text,
+                        }),
+                    ),
+            );
+
+            options.reply_markup = {
+                keyboard,
+                resize_keyboard: true,
+            };
+        }
+
+        if (buttons === false) {
+            options.reply_markup = { remove_keyboard: true };
+        }
+
+        await this.bot.sendMessage(user.chatId, message, options);
+    }
+
+    async redirectToHandler(user: User, state: string, message?: string): Promise<void> {
+        const context: TelegramContext = new TelegramContext(this.userService, this, user, message);
+        const [target, methodName]: [new () => object, string] = handlers.get(state);
+
+        this.moduleRef.get(target)[methodName](context);
     }
 
     private async handleAnyMessage(message: TelegramBot.Message, metadata: TelegramBot.Metadata): Promise<void> {
@@ -95,8 +125,9 @@ export class TelegramService implements OnModuleInit {
         const user: User = await this.userService.getUser(message);
         const state: string = user.state || DEFAULT_STATE;
         const [target, methodName]: [new () => object, string] = handlers.get(state);
+        const context: TelegramContext = new TelegramContext(this.userService, this, user, message.text);
 
-        this.moduleRef.get(target)[methodName](user);
+        this.moduleRef.get(target)[methodName](context);
     }
 
     private async handlePhoto(message: TelegramBot.Message): Promise<void> {

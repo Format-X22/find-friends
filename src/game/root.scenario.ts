@@ -1,14 +1,27 @@
 import { TgController, TgStateHandler } from '../telegram/telegram.decorator';
-import { UserService } from '../user/user.service';
-import { TelegramService } from '../telegram/telegram.service';
-import { User } from '../user/user.schema';
+import { TelegramContext } from '../telegram/telegram.context';
+
+enum ERootButtons {
+    OPTIONS = 'Настройки',
+}
 
 @TgController()
 export class RootScenario {
-    constructor(private userService: UserService, private telegramService: TelegramService) {}
-
     @TgStateHandler()
-    async root(user: User): Promise<void> {
-        await this.telegramService.sendText(user, 'Ok');
+    async root(ctx: TelegramContext): Promise<void> {
+        await ctx.setState('root->mainMenuSelect');
+        await ctx.send('Добро пожаловать в тестовую версию бота...', ctx.buttonList(ERootButtons));
+    }
+
+    @TgStateHandler('mainMenuSelect')
+    async mainMenuSelect(ctx: TelegramContext<ERootButtons>): Promise<void> {
+        switch (ctx.message) {
+            case ERootButtons.OPTIONS:
+                await ctx.redirect('options->optionsList');
+                break;
+
+            default:
+                await ctx.send('Похоже такой настройки нет...');
+        }
     }
 }

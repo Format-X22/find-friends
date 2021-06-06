@@ -5,7 +5,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 export const DEFAULT_STATE: string = 'root';
 
 @Schema({ versionKey: false })
-export class User {
+export class UserDefination {
     _id: mongoose.Schema.Types.ObjectId | string;
 
     @Prop()
@@ -28,7 +28,16 @@ export class User {
 
     @Prop({ default: DEFAULT_STATE })
     state: string;
+
+    @Prop()
+    character: string;
+
+    @Prop()
+    intensive: string;
+
+    @Prop()
+    about: string;
 }
 
-export type UserDocument = User & Document;
-export const UserSchema: mongoose.Schema<UserDocument> = SchemaFactory.createForClass<User, UserDocument>(User);
+export type User = UserDefination & Document;
+export const UserSchema: mongoose.Schema<User> = SchemaFactory.createForClass<UserDefination, User>(UserDefination);
