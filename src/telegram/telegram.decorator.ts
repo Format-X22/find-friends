@@ -29,3 +29,6 @@ export const TgStateHandler: TSavePath<MethodDecorator> = (statePoint: string = 
         targetHandlers.set(statePoint, descriptor.value);
     };
 };
+
+// TODO Support photo handler
+export const TgSupportPhoto: void = null;

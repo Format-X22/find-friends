@@ -1,0 +1,23 @@
+version: '2.1'
+services:
+  find-friends-mongo:
+    container_name: find-friends-mongo
+    image: mongo
+    restart: always
+    healthcheck:
+      test: mongo --eval 'db.getCollectionNames()'
+      interval: 10s
+      timeout: 2s
+      retries: 10
+    volumes:
+      - find-friends-mongodb-vol:/data/db
+    ports:
+      - 127.0.0.1:27020:27017
+    networks:
+      - services-tier
+
+volumes:
+  find-friends-mongodb-vol:
+
+networks:
+  services-tier:
