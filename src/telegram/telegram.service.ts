@@ -2,7 +2,7 @@ import * as TelegramBot from 'node-telegram-bot-api';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { handlers } from './telegram.decorator';
 import { ConfigService } from '@nestjs/config';
-import { DEFAULT_STATE, User } from '../user/user.schema';
+import { User } from '../user/user.schema';
 import { UserService } from '../user/user.service';
 import { ModuleRef } from '@nestjs/core';
 import { KeyboardButton } from 'node-telegram-bot-api';
@@ -123,7 +123,7 @@ export class TelegramService implements OnModuleInit {
 
     private async handleText(message: TelegramBot.Message): Promise<void> {
         const user: User = await this.userService.getUser(message);
-        const state: string = user.state || DEFAULT_STATE;
+        const state: string = user.state || 'root->root';
         const [target, methodName]: [new () => object, string] = handlers.get(state);
         const context: TelegramContext = new TelegramContext(this.userService, this, user, message.text);
 
@@ -134,6 +134,7 @@ export class TelegramService implements OnModuleInit {
         const user: User = await this.userService.getUser(message);
 
         // TODO -
+        await this.justSend(message, '[временно отключено]');
     }
 
     private async justSend(message: TelegramBot.Message, text: string): Promise<void> {

@@ -5,7 +5,7 @@ enum ERootButtons {
     OPTIONS = 'Настройки',
 }
 
-@TgController()
+@TgController('root')
 export class RootScenario {
     @TgStateHandler()
     async root(ctx: TelegramContext): Promise<void> {
@@ -13,7 +13,7 @@ export class RootScenario {
         await ctx.send('Добро пожаловать в тестовую версию бота...', ctx.buttonList(ERootButtons));
     }
 
-    @TgStateHandler('mainMenuSelect')
+    @TgStateHandler()
     async mainMenuSelect(ctx: TelegramContext<ERootButtons>): Promise<void> {
         switch (ctx.message) {
             case ERootButtons.OPTIONS:
@@ -23,5 +23,7 @@ export class RootScenario {
             default:
                 await ctx.send('Похоже такой настройки нет...');
         }
+
+        RootScenario['mainMenuSelect'];
     }
 }

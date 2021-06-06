@@ -2,8 +2,6 @@ import { Document } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
-export const DEFAULT_STATE: string = 'root';
-
 @Schema({ versionKey: false })
 export class UserDefination {
     _id: mongoose.Schema.Types.ObjectId | string;
@@ -26,7 +24,7 @@ export class UserDefination {
     @Prop()
     chatId: number;
 
-    @Prop({ default: DEFAULT_STATE })
+    @Prop()
     state: string;
 
     @Prop()

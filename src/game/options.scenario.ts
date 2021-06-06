@@ -32,7 +32,7 @@ enum EAboutOptions {
 
 @TgController('options')
 export class OptionsScenario {
-    @TgStateHandler('optionsList')
+    @TgStateHandler()
     async optionsList(ctx: TelegramContext): Promise<void> {
         await ctx.send(
             'Отлично, тут можно настроить игру под себя, ну и рассказать другим чуть-чуть о себе.',
@@ -41,8 +41,8 @@ export class OptionsScenario {
         await ctx.setState('options->optionsSelect');
     }
 
-    @TgStateHandler('optionsSelect')
-    async optionSelect(ctx: TelegramContext<EOptionsList>): Promise<void> {
+    @TgStateHandler()
+    async optionsSelect(ctx: TelegramContext<EOptionsList>): Promise<void> {
         switch (ctx.message) {
             case EOptionsList.CHARACTER:
                 await ctx.send(
@@ -80,7 +80,7 @@ export class OptionsScenario {
                 break;
 
             case EOptionsList.BACK:
-                await ctx.redirect('root');
+                await ctx.redirect('root->root');
                 break;
 
             default:
@@ -88,7 +88,7 @@ export class OptionsScenario {
         }
     }
 
-    @TgStateHandler('characterSelect')
+    @TgStateHandler()
     async characterSelect(ctx: TelegramContext<ECharacterOptions>): Promise<void> {
         switch (ctx.message) {
             case ECharacterOptions.FULL_FUN:
@@ -113,7 +113,7 @@ export class OptionsScenario {
         await this.successSave(ctx);
     }
 
-    @TgStateHandler('intensiveSelect')
+    @TgStateHandler()
     async intensiveSelect(ctx: TelegramContext<EIntensiveOptions>): Promise<void> {
         switch (ctx.message) {
             case EIntensiveOptions.MAX:
@@ -138,7 +138,7 @@ export class OptionsScenario {
         await this.successSave(ctx);
     }
 
-    @TgStateHandler('aboutInput')
+    @TgStateHandler()
     async aboutInput(ctx: TelegramContext<EAboutOptions | string>): Promise<void> {
         switch (ctx.message) {
             case EAboutOptions.CANCEL:
