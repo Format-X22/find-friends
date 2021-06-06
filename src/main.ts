@@ -1,8 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
+import { INestApplicationContext } from '@nestjs/common';
+import { TelegramService } from './telegram/telegram.service';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  await app.listen(3000);
+async function bootstrap(): Promise<void> {
+    const app: INestApplicationContext = await NestFactory.createApplicationContext(AppModule);
 }
 bootstrap();
