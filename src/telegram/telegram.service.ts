@@ -19,17 +19,7 @@ export class TelegramService implements OnModuleInit {
         this.bot = new TelegramBot(this.configService.get('FF_TG_KEY'), { polling: true });
 
         this.bot.on('message', async (message: TelegramBot.Message, metadata: TelegramBot.Metadata): Promise<void> => {
-            try {
-                await this.handleAnyMessage(message, metadata);
-            } catch (error) {
-                this.logger.error(error);
-
-                try {
-                    await this.justSend(message, 'Ой, что-то пошло не так...');
-                } catch (error) {
-                    this.logger.error(error);
-                }
-            }
+            await this.tryHandle(message, async (): Promise<void> => await this.handleAnyMessage(message, metadata));
         });
     }
 
@@ -60,10 +50,12 @@ export class TelegramService implements OnModuleInit {
     }
 
     async redirectToHandler(user: User, state: string, message?: string): Promise<void> {
-        const context: TelegramContext = new TelegramContext(this.userService, this, user, message);
-        const [target, methodName]: [new () => object, string] = handlers.get(state);
+        await this.tryHandle({ chat: { id: user.chatId, type: null } }, async (): Promise<void> => {
+            const context: TelegramContext = new TelegramContext(this.userService, this, user, message);
+            const [target, methodName]: [new () => object, string] = handlers.get(state);
 
-        this.moduleRef.get(target)[methodName](context);
+            this.moduleRef.get(target, { strict: false })[methodName](context);
+        });
     }
 
     private async handleAnyMessage(message: TelegramBot.Message, metadata: TelegramBot.Metadata): Promise<void> {
@@ -127,7 +119,7 @@ export class TelegramService implements OnModuleInit {
         const [target, methodName]: [new () => object, string] = handlers.get(state);
         const context: TelegramContext = new TelegramContext(this.userService, this, user, message.text);
 
-        this.moduleRef.get(target)[methodName](context);
+        this.moduleRef.get(target, { strict: false })[methodName](context);
     }
 
     private async handlePhoto(message: TelegramBot.Message): Promise<void> {
@@ -137,7 +129,21 @@ export class TelegramService implements OnModuleInit {
         await this.justSend(message, '[временно отключено]');
     }
 
-    private async justSend(message: TelegramBot.Message, text: string): Promise<void> {
+    private async justSend(message: Pick<TelegramBot.Message, 'chat'>, text: string): Promise<void> {
         await this.bot.sendMessage(message.chat.id, text);
+    }
+
+    private async tryHandle(message: Pick<TelegramBot.Message, 'chat'>, handler: Function): Promise<void> {
+        try {
+            await handler();
+        } catch (error) {
+            this.logger.error(error);
+
+            try {
+                await this.justSend(message, 'Ой, что-то пошло не так...');
+            } catch (error) {
+                this.logger.error(error);
+            }
+        }
     }
 }

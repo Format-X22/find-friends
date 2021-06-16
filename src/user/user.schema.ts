@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 @Schema({ versionKey: false })
-export class UserDefination {
+export class UserDefinition {
     _id: mongoose.Schema.Types.ObjectId | string;
 
     @Prop()
@@ -35,7 +35,13 @@ export class UserDefination {
 
     @Prop()
     about: string;
+
+    @Prop({ type: [mongoose.Schema.Types.ObjectId] })
+    quests: Array<mongoose.Schema.Types.ObjectId | string>;
+
+    @Prop({ type: [mongoose.Schema.Types.ObjectId] })
+    alreadyPlaysWith: Array<mongoose.Schema.Types.ObjectId | string>;
 }
 
-export type User = UserDefination & Document;
-export const UserSchema: mongoose.Schema<User> = SchemaFactory.createForClass<UserDefination, User>(UserDefination);
+export type User = UserDefinition & Document;
+export const UserSchema: mongoose.Schema<User> = SchemaFactory.createForClass<UserDefinition, User>(UserDefinition);

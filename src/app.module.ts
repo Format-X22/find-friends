@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TelegramModule } from './telegram/telegram.module';
-import { GameModule } from './game/game.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { MongooseModule, MongooseModuleOptions } from '@nestjs/mongoose';
-import { User, UserSchema } from './user/user.schema';
+import { QuestModule } from './quest/quest.module';
 
 @Module({
     imports: [
@@ -21,7 +20,7 @@ import { User, UserSchema } from './user/user.schema';
         }),
         UserModule,
         TelegramModule,
-        GameModule,
+        QuestModule,
     ],
     controllers: [],
     providers: [],
