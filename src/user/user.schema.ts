@@ -1,6 +1,7 @@
 import { Document } from 'mongoose';
 import * as mongoose from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { ECharacterOptions, EIntensiveOptions } from '../game/options.scenario';
 
 @Schema({ versionKey: false })
 export class UserDefinition {
@@ -27,11 +28,11 @@ export class UserDefinition {
     @Prop()
     state: string;
 
-    @Prop()
-    character: string;
+    @Prop({ type: String, default: (): string => ECharacterOptions.BALANCE })
+    character: ECharacterOptions;
 
-    @Prop()
-    intensive: string;
+    @Prop({ type: String, default: (): string => EIntensiveOptions.MEDIUM })
+    intensive: EIntensiveOptions;
 
     @Prop()
     about: string;

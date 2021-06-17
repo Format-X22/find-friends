@@ -8,7 +8,7 @@ enum EOptionsList {
     BACK = '(назад)',
 }
 
-enum ECharacterOptions {
+export enum ECharacterOptions {
     FULL_INTELLIGENCE = 'Максимально саморазвитие',
     MORE_INTELLIGENCE = 'Побольше про саморазвитие',
     BALANCE = 'Выбираю баланс',
@@ -17,7 +17,7 @@ enum ECharacterOptions {
     CANCEL = '(отмена)',
 }
 
-enum EIntensiveOptions {
+export enum EIntensiveOptions {
     MAX = 'Максимальная',
     HIGH = 'Высокая',
     MEDIUM = 'Средняя',
