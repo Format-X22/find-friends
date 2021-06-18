@@ -16,6 +16,9 @@ export class UserDefinition {
     @Prop({ type: Boolean, default: (): boolean => false })
     isBanned: boolean;
 
+    @Prop({ type: Boolean, default: (): boolean => false })
+    isBoring: boolean;
+
     @Prop()
     firstName: string;
 

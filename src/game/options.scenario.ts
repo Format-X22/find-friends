@@ -90,7 +90,7 @@ export class OptionsScenario {
                 break;
 
             case EOptionsList.BACK:
-                await ctx.redirect('root->root');
+                await ctx.redirect('root->mainMenu');
                 break;
 
             default:

@@ -50,6 +50,18 @@ export class RootScenario {
     }
 
     @TgStateHandler()
+    async mainMenu(ctx: TelegramContext): Promise<void> {
+        let buttonsEnum: typeof ERootButtons = ERootButtons;
+
+        if (ctx.isAdmin) {
+            buttonsEnum = { ...ERootButtons, ...ERootAdminButtons };
+        }
+
+        await ctx.send('Возвращаю тебя в главный диалог...', ctx.buttonList(buttonsEnum));
+        await ctx.setState('root->mainMenuSelect');
+    }
+
+    @TgStateHandler()
     async mainMenuSelect(ctx: TelegramContext<ERootButtons & ERootAdminButtons>): Promise<void> {
         switch (ctx.message) {
             case ERootButtons.OPTIONS:

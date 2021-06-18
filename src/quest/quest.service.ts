@@ -21,8 +21,13 @@ export class QuestService implements OnModuleInit {
         return [];
     }
 
-    @Cron(CronExpression.EVERY_HOUR)
+    @Cron(CronExpression.EVERY_DAY_AT_2PM)
     private async matchPlayers(): Promise<void> {
+        // TODO -
+    }
+
+    @Cron(CronExpression.EVERY_HOUR)
+    private async matchBoringPlayers(): Promise<void> {
         // TODO -
     }
 }
