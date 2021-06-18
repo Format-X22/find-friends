@@ -7,21 +7,36 @@ enum ERootButtons {
     NEWS = 'Новости и объявления',
 }
 
+enum ERootResume {
+    RESUME = 'Запустить игру снова!',
+}
+
 @TgController('root')
 export class RootScenario {
     @TgStateHandler()
     async root(ctx: TelegramContext): Promise<void> {
-        await ctx.setState('root->mainMenuSelect');
-        await ctx.send(
-            'Добро пожаловать в тестовую версию бота...' +
-                '\n\n' +
-                'В этой версии всего три задания - Знакомство наоборот, Научи меня и Рандомный бар.' +
-                '\nВ зависимости от настроек будут попадаться соответствующие задания.' +
-                '\n\nПишите отзывы и предложения - @oPavlov' +
-                '\n\nНу а все новости, объявления и прочее вы можете получать по этой ссылке:' +
-                '\nhttps://t.me/joinchat/Y055xr64tcViMTdi',
-            ctx.buttonList(ERootButtons),
-        );
+        if (ctx.user.isActive) {
+            await ctx.send(
+                'Добро пожаловать в тестовую версию бота...' +
+                    '\n\n' +
+                    'В этой версии всего три задания - Знакомство наоборот, Научи меня и Рандомный бар.' +
+                    '\nВ зависимости от настроек будут попадаться соответствующие задания.' +
+                    '\n\nПишите отзывы и предложения - @oPavlov' +
+                    '\n\nНу а все новости, объявления и прочее вы можете получать по этой ссылке:' +
+                    '\nhttps://t.me/joinchat/Y055xr64tcViMTdi',
+                ctx.buttonList(ERootButtons),
+            );
+
+            await ctx.setState('root->mainMenuSelect');
+        } else {
+            await ctx.send(
+                'Игра выключена, но ты всегда можешь запустить её снова' +
+                    ' - нажми на кнопку ниже или напиши что угодно сюда в чат - и ты вернешься в игру :)',
+                ctx.buttonList(ERootResume),
+            );
+
+            await ctx.setState('root->resume');
+        }
     }
 
     @TgStateHandler()
@@ -48,5 +63,13 @@ export class RootScenario {
     async showNews(ctx: TelegramContext): Promise<void> {
         await ctx.setState('root->mainMenuSelect');
         await ctx.send('Все новости и объявления публикуются тут:\nhttps://t.me/joinchat/Y055xr64tcViMTdi');
+    }
+
+    @TgStateHandler()
+    async resume(ctx: TelegramContext): Promise<void> {
+        ctx.user.isActive = true;
+
+        await ctx.user.save();
+        await ctx.redirect('root->root');
     }
 }

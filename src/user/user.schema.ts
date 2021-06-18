@@ -10,6 +10,9 @@ export class UserDefinition {
     @Prop()
     userId: number;
 
+    @Prop({ type: Boolean, default: (): boolean => true })
+    isActive: boolean;
+
     @Prop()
     firstName: string;
 

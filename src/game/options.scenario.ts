@@ -5,6 +5,7 @@ enum EOptionsList {
     CHARACTER = 'Характер заданий',
     INTENSIVE = 'Интенсивность игры',
     ABOUT = 'Чуть-чуть о себе',
+    PAUSE = 'Приостановить игру',
     BACK = '(назад)',
 }
 
@@ -77,6 +78,15 @@ export class OptionsScenario {
                     ctx.buttonList(EAboutOptions),
                 );
                 await ctx.setState('options->aboutInput');
+                break;
+
+            case EOptionsList.PAUSE:
+                await ctx.send('Хорошо, игра поставлена на паузу. Возвращайся когда захочешь :)');
+
+                ctx.user.isActive = false;
+                await ctx.user.save();
+
+                await ctx.redirect('root->root');
                 break;
 
             case EOptionsList.BACK:
