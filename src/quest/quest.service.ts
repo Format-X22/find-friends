@@ -14,10 +14,8 @@ export class QuestService implements OnModuleInit {
         }
     }
 
-    async getUserQuestNames(questList: Array<ObjectId | string>): Promise<Array<string>> {
-        const result: Array<Quest> = await this.questModel.find({ _id: { $in: questList } });
-
-        console.log(result);
+    async getUserQuestNames(): Promise<Array<string>> {
+        // TODO -
 
         return [];
     }

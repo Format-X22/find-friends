@@ -38,9 +38,6 @@ export class UserDefinition {
     about: string;
 
     @Prop({ type: [mongoose.Schema.Types.ObjectId] })
-    quests: Array<mongoose.Schema.Types.ObjectId | string>;
-
-    @Prop({ type: [mongoose.Schema.Types.ObjectId] })
     alreadyPlaysWith: Array<mongoose.Schema.Types.ObjectId | string>;
 }
 

@@ -8,7 +8,6 @@ export class QuestScenario {
 
     @TgStateHandler()
     async questList(ctx: TelegramContext): Promise<void> {
-        const names: Array<string> = await this.questService.getUserQuestNames(ctx.user.quests);
         // TODO -
         await ctx.redirect('root->root');
     }
