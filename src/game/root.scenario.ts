@@ -7,6 +7,10 @@ enum ERootButtons {
     NEWS = 'Новости и объявления',
 }
 
+enum ERootAdminButtons {
+    ADMIN = 'Админ панель',
+}
+
 enum ERootResume {
     RESUME = 'Запустить игру снова!',
 }
@@ -16,6 +20,12 @@ export class RootScenario {
     @TgStateHandler()
     async root(ctx: TelegramContext): Promise<void> {
         if (ctx.user.isActive) {
+            let buttonsEnum: typeof ERootButtons = ERootButtons;
+
+            if (ctx.isAdmin) {
+                buttonsEnum = { ...ERootButtons, ...ERootAdminButtons };
+            }
+
             await ctx.send(
                 'Добро пожаловать в тестовую версию бота...' +
                     '\n\n' +
@@ -24,7 +34,7 @@ export class RootScenario {
                     '\n\nПишите отзывы и предложения - @oPavlov' +
                     '\n\nНу а все новости, объявления и прочее вы можете получать по этой ссылке:' +
                     '\nhttps://t.me/joinchat/Y055xr64tcViMTdi',
-                ctx.buttonList(ERootButtons),
+                ctx.buttonList(buttonsEnum),
             );
 
             await ctx.setState('root->mainMenuSelect');
@@ -40,7 +50,7 @@ export class RootScenario {
     }
 
     @TgStateHandler()
-    async mainMenuSelect(ctx: TelegramContext<ERootButtons>): Promise<void> {
+    async mainMenuSelect(ctx: TelegramContext<ERootButtons & ERootAdminButtons>): Promise<void> {
         switch (ctx.message) {
             case ERootButtons.OPTIONS:
                 await ctx.redirect('options->optionsList');
@@ -52,6 +62,10 @@ export class RootScenario {
 
             case ERootButtons.NEWS:
                 await ctx.redirect('root->showNews');
+                break;
+
+            case ERootAdminButtons.ADMIN:
+                await ctx.redirect('admin->mainMenu');
                 break;
 
             default:

@@ -95,6 +95,7 @@ export class OptionsScenario {
 
             default:
                 await ctx.send('Ой, а такой настройки нет...');
+                await ctx.redirect('options->optionsList');
         }
     }
 

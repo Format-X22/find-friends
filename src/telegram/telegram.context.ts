@@ -8,6 +8,7 @@ export class TelegramContext<TInboundMessage = string> {
         private telegramService: TelegramService,
         public user: User,
         public message: TInboundMessage,
+        public isAdmin: boolean,
     ) {}
 
     async send(message: string, buttons?: Array<Array<string>> | false): Promise<void> {
