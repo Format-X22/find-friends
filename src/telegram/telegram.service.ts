@@ -129,7 +129,12 @@ export class TelegramService implements OnModuleInit {
             return;
         }
 
-        const state: string = user.state || 'root->root';
+        let state: string = user.state;
+
+        if (!user.state || message.text === '/start') {
+            state = 'root->root'
+        }
+
         const [target, methodName]: [new () => object, string] = handlers.get(state);
         const context: TelegramContext = new TelegramContext(
             this.userService,

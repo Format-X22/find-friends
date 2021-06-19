@@ -3,6 +3,7 @@ import * as TelegramBot from 'node-telegram-bot-api';
 import { User, UserDefinition } from './user.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { ECharacterOptions, EIntensiveOptions } from '../game/options.scenario';
 
 @Injectable()
 export class UserService {
@@ -24,7 +25,14 @@ export class UserService {
             { upsert: true },
         );
 
-        return this.userModel.findOne({ chatId: message.chat.id });
+        const user: User = await this.userModel.findOne({ chatId: message.chat.id });
+
+        user.character = user.character || ECharacterOptions.BALANCE;
+        user.intensive = user.intensive || EIntensiveOptions.MEDIUM;
+
+        await user.save();
+
+        return user;
     }
 
     async setState(user: User, state: string): Promise<void> {

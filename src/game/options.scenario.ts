@@ -24,6 +24,7 @@ export enum EIntensiveOptions {
     MEDIUM = 'Средняя',
     LOW = 'Низкая',
     MIN = 'Минимальная',
+    PAUSE = 'Приостановить игру',
     CANCEL = '(отмена)',
 }
 
@@ -36,7 +37,12 @@ export class OptionsScenario {
     @TgStateHandler()
     async optionsList(ctx: TelegramContext): Promise<void> {
         await ctx.send(
-            'Отлично, тут можно настроить игру под себя, ну и рассказать другим чуть-чуть о себе.',
+            'Отлично, тут можно настроить игру под себя, ну и рассказать другим чуть-чуть о себе.' +
+                '\n\nСейчас у тебя такие настройки:' +
+                '\n\n' +
+                `Характер заданий => ${ctx.user.character}\n` +
+                `Интенсивность игры => ${ctx.user.intensive}\n` +
+                `О себе => ${ctx.user.about || '<пусто>'}\n`,
             ctx.buttonList(EOptionsList),
         );
         await ctx.setState('options->optionsSelect');
@@ -81,12 +87,7 @@ export class OptionsScenario {
                 break;
 
             case EOptionsList.PAUSE:
-                await ctx.send('Хорошо, игра поставлена на паузу. Возвращайся когда захочешь :)');
-
-                ctx.user.isActive = false;
-                await ctx.user.save();
-
-                await ctx.redirect('root->root');
+                await this.pauseGame(ctx);
                 break;
 
             case EOptionsList.BACK:
@@ -137,6 +138,10 @@ export class OptionsScenario {
                 await ctx.user.save();
                 break;
 
+            case EIntensiveOptions.PAUSE:
+                await this.pauseGame(ctx);
+                return;
+
             case EIntensiveOptions.CANCEL:
                 await this.cancel(ctx);
                 return;
@@ -182,5 +187,14 @@ export class OptionsScenario {
     private async successSave(ctx: TelegramContext): Promise<void> {
         await ctx.send('Изменения сохранены.');
         await ctx.redirect('options->optionsList');
+    }
+
+    private async pauseGame(ctx: TelegramContext): Promise<void> {
+        await ctx.send('Хорошо, игра поставлена на паузу. Возвращайся когда захочешь :)');
+
+        ctx.user.isActive = false;
+        await ctx.user.save();
+
+        await ctx.redirect('root->root');
     }
 }
