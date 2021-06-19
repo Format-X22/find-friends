@@ -3,18 +3,27 @@ import { TelegramContext } from '../telegram/telegram.context';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDefinition } from '../user/user.schema';
 import { Model, UpdateQuery } from 'mongoose';
+import { TelegramService } from '../telegram/telegram.service';
 
 enum EAdminOptions {
     DEACTIVATE = 'Деактивировать',
     REACTIVATE = 'Снова активировать',
     SET_BUN = 'Забанить',
     REMOVE_BUN = 'Разбанить',
+    MASS_SEND = 'Массовая рассылка',
     BACK = '(назад)',
+}
+
+enum ECancelButton {
+    CANCEL = '(отменить)',
 }
 
 @TgController('admin')
 export class AdminScenario {
-    constructor(@InjectModel(UserDefinition.name) private userModel: Model<User>) {}
+    constructor(
+        @InjectModel(UserDefinition.name) private userModel: Model<User>,
+        private telegramService: TelegramService,
+    ) {}
 
     @TgStateHandler()
     async mainMenu(ctx: TelegramContext): Promise<void> {
@@ -43,6 +52,11 @@ export class AdminScenario {
             case EAdminOptions.REMOVE_BUN:
                 await ctx.send('Введите ник');
                 await ctx.setState('admin->removeBunUserInput');
+                break;
+
+            case EAdminOptions.MASS_SEND:
+                await ctx.send('Введите сообщение', ctx.buttonList(ECancelButton));
+                await ctx.setState('admin->massSendInput');
                 break;
 
             case EAdminOptions.BACK:
@@ -101,6 +115,24 @@ export class AdminScenario {
 
         await ctx.send('Пользователь разбанен');
         await ctx.redirect('admin->mainMenu');
+    }
+
+    @TgStateHandler()
+    async massSendInput(ctx: TelegramContext<ECancelButton | string>): Promise<void> {
+        await ctx.redirect('admin->mainMenu');
+
+        if (ctx.message === ECancelButton.CANCEL) {
+            return;
+        }
+
+        const users: Array<User> = await this.userModel.find(
+            { isActive: true, isBanned: false },
+            { _id: false, chatId: true },
+        );
+
+        for (const user of users) {
+            await this.telegramService.sendText(user, ctx.message);
+        }
     }
 
     private async updateUser(ctx: TelegramContext, update: UpdateQuery<User>): Promise<boolean> {
