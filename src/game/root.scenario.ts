@@ -11,58 +11,42 @@ enum ERootAdminButtons {
     ADMIN = 'Админ панель',
 }
 
-enum ERootResume {
+enum EResumeButton {
     RESUME = 'Запустить игру снова!',
 }
+
+const excludeInInactive: Array<string> = [ERootButtons.OPTIONS];
 
 @TgController('root')
 export class RootScenario {
     @TgStateHandler()
     async root(ctx: TelegramContext): Promise<void> {
-        if (ctx.user.isActive) {
-            let buttonsEnum: typeof ERootButtons = ERootButtons;
+        await ctx.send(
+            'Добро пожаловать в случайный чай!' +
+                '\n\n' +
+                'В этой версии всего три задания - Знакомство наоборот, Научи меня и Рандомный бар.' +
+                '\nВ зависимости от настроек будут попадаться соответствующие задания.' +
+                '\n\nПишите отзывы и предложения - @oPavlov' +
+                '\n\nНу а все новости, объявления и прочее вы можете получать по этой ссылке:' +
+                '\nhttps://t.me/joinchat/Y055xr64tcViMTdi',
+            ctx.buttonList(this.makeMainMenuButtons(ctx)),
+        );
 
-            if (ctx.isAdmin) {
-                buttonsEnum = { ...ERootButtons, ...ERootAdminButtons };
-            }
+        await ctx.setState('root->mainMenuSelect');
 
-            await ctx.send(
-                'Добро пожаловать в тестовую версию бота...' +
-                    '\n\n' +
-                    'В этой версии всего три задания - Знакомство наоборот, Научи меня и Рандомный бар.' +
-                    '\nВ зависимости от настроек будут попадаться соответствующие задания.' +
-                    '\n\nПишите отзывы и предложения - @oPavlov' +
-                    '\n\nНу а все новости, объявления и прочее вы можете получать по этой ссылке:' +
-                    '\nhttps://t.me/joinchat/Y055xr64tcViMTdi',
-                ctx.buttonList(buttonsEnum),
-            );
-
-            await ctx.setState('root->mainMenuSelect');
-        } else {
-            await ctx.send(
-                'Игра выключена, но ты всегда можешь запустить её снова' +
-                    ' - нажми на кнопку ниже или напиши что угодно сюда в чат - и ты вернешься в игру :)',
-                ctx.buttonList(ERootResume),
-            );
-
-            await ctx.setState('root->resume');
+        if (!ctx.user.isActive) {
+            await ctx.send('Игра выключена, но ты всегда можешь запустить её снова!');
         }
     }
 
     @TgStateHandler()
     async mainMenu(ctx: TelegramContext): Promise<void> {
-        let buttonsEnum: typeof ERootButtons = ERootButtons;
-
-        if (ctx.isAdmin) {
-            buttonsEnum = { ...ERootButtons, ...ERootAdminButtons };
-        }
-
-        await ctx.send('Возвращаю тебя в главный диалог...', ctx.buttonList(buttonsEnum));
+        await ctx.send('Возвращаю тебя в главный диалог...', ctx.buttonList(this.makeMainMenuButtons(ctx)));
         await ctx.setState('root->mainMenuSelect');
     }
 
     @TgStateHandler()
-    async mainMenuSelect(ctx: TelegramContext<ERootButtons & ERootAdminButtons>): Promise<void> {
+    async mainMenuSelect(ctx: TelegramContext<ERootButtons & ERootAdminButtons & EResumeButton>): Promise<void> {
         switch (ctx.message) {
             case ERootButtons.OPTIONS:
                 await ctx.redirect('options->optionsList');
@@ -78,6 +62,10 @@ export class RootScenario {
 
             case ERootAdminButtons.ADMIN:
                 await ctx.redirect('admin->mainMenu');
+                break;
+
+            case EResumeButton.RESUME:
+                await ctx.redirect('root->resume');
                 break;
 
             default:
@@ -97,5 +85,24 @@ export class RootScenario {
 
         await ctx.user.save();
         await ctx.redirect('root->root');
+    }
+
+    private makeMainMenuButtons(ctx: TelegramContext): Record<string, string> {
+        let buttons: Record<string, string> = ERootButtons;
+
+        if (ctx.isAdmin) {
+            buttons = { ...ERootButtons, ...ERootAdminButtons };
+        }
+
+        if (!ctx.user.isActive) {
+            buttons = { ...EResumeButton, ...buttons };
+            buttons = Object.fromEntries(
+                Object.entries(buttons).filter(
+                    ([key, value]: [string, string]): boolean => !excludeInInactive.includes(value),
+                ),
+            );
+        }
+
+        return buttons;
     }
 }
