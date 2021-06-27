@@ -12,7 +12,7 @@ enum ERootAdminButtons {
 }
 
 enum EResumeButton {
-    RESUME = 'Запустить игру снова!',
+    RESUME = 'Запустить игру!',
 }
 
 const excludeInInactive: Array<string> = [ERootButtons.OPTIONS];
@@ -24,8 +24,8 @@ export class RootScenario {
         await ctx.send(
             'Добро пожаловать в случайный чай!' +
                 '\n\n' +
-                'В этой версии всего три задания - Знакомство наоборот, Научи меня и Рандомный бар.' +
-                '\nВ зависимости от настроек будут попадаться соответствующие задания.' +
+                'Это бот, который найдет тебе напарника на встречу в формате случайного чая!' +
+                '\nСо временем тут будут появляться ещё фичи, скучно не будет :)' +
                 '\n\nПишите отзывы и предложения - @oPavlov' +
                 '\n\nНу а все новости, объявления и прочее вы можете получать по этой ссылке:' +
                 '\nhttps://t.me/joinchat/Y055xr64tcViMTdi',
@@ -35,7 +35,7 @@ export class RootScenario {
         await ctx.setState('root->mainMenuSelect');
 
         if (!ctx.user.isActive) {
-            await ctx.send('Игра выключена, но ты всегда можешь запустить её снова!');
+            await ctx.send('Игра выключена, но ты всегда можешь запустить её!');
         }
     }
 

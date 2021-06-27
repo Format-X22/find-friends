@@ -2,9 +2,9 @@ import { TgController, TgStateHandler } from '../telegram/telegram.decorator';
 import { TelegramContext } from '../telegram/telegram.context';
 
 enum EOptionsList {
-    CHARACTER = 'Характер заданий',
-    INTENSIVE = 'Интенсивность игры',
-    ABOUT = 'Чуть-чуть о себе',
+    //CHARACTER = 'Характер заданий',
+    //INTENSIVE = 'Интенсивность игры',
+    //ABOUT = 'Чуть-чуть о себе',
     PAUSE = 'Приостановить новые задания',
     BACK = '(назад)',
 }
@@ -38,11 +38,12 @@ export class OptionsScenario {
     async optionsList(ctx: TelegramContext): Promise<void> {
         await ctx.send(
             'Отлично, тут можно настроить игру под себя, ну и рассказать другим чуть-чуть о себе.' +
-                '\n\nСейчас у тебя такие настройки:' +
+                /*'\n\nСейчас у тебя такие настройки:' +
                 '\n\n' +
                 `Характер заданий => ${ctx.user.character}\n` +
                 `Интенсивность игры => ${ctx.user.intensive}\n` +
-                `О себе => ${ctx.user.about || '<пусто>'}\n`,
+                `О себе => ${ctx.user.about || '<пусто>'}\n`*/
+            '\n(но пока остальные настройки ещё скрыты от глаз)',
             ctx.buttonList(EOptionsList),
         );
         await ctx.setState('options->optionsSelect');
@@ -51,7 +52,7 @@ export class OptionsScenario {
     @TgStateHandler()
     async optionsSelect(ctx: TelegramContext<EOptionsList>): Promise<void> {
         switch (ctx.message) {
-            case EOptionsList.CHARACTER:
+            /*case EOptionsList.CHARACTER:
                 await ctx.send(
                     'Тут можно настроить характер игры - ненапряжный отдых или суровое саморазвитие?' +
                         ' А может и того и другого? Или просто пообщаться в теплой компании на отвлеченные темы?' +
@@ -84,7 +85,7 @@ export class OptionsScenario {
                     ctx.buttonList(EAboutOptions),
                 );
                 await ctx.setState('options->aboutInput');
-                break;
+                break;*/
 
             case EOptionsList.PAUSE:
                 await this.pauseGame(ctx);

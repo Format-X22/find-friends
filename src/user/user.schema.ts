@@ -10,7 +10,7 @@ export class UserDefinition {
     @Prop()
     userId: number;
 
-    @Prop({ type: Boolean, default: (): boolean => true })
+    @Prop({ type: Boolean, default: (): boolean => false })
     isActive: boolean;
 
     @Prop({ type: Boolean, default: (): boolean => false })
