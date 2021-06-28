@@ -47,6 +47,7 @@ export class QuestScenario {
 
             await ctx.send(message, ctx.buttonList(extraButtons));
             await ctx.setState('quest->noQuestsSelect');
+            return;
         }
 
         // TODO -
