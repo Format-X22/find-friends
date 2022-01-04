@@ -1,7 +1,6 @@
-import { QuestDefinition } from '../quest.schema';
 import { ECharacterOptions } from '../../game/options.scenario';
 
-export const ReverseDating: QuestDefinition = {
+export const ReverseDating = {
     humanId: 'ReverseDating',
     name: 'Знакомство наоборот',
     characters: [

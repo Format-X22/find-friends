@@ -2,9 +2,10 @@ import { Module } from '@nestjs/common';
 import { TelegramModule } from './telegram/telegram.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from './user/user.module';
-import { MongooseModule, MongooseModuleOptions } from '@nestjs/mongoose';
 import { QuestModule } from './quest/quest.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { SequelizeModule } from '@nestjs/sequelize';
+import { User } from './user/user.model';
 
 @Module({
     imports: [
@@ -13,12 +14,22 @@ import { ScheduleModule } from '@nestjs/schedule';
             isGlobal: true,
             cache: true,
         }),
-        MongooseModule.forRootAsync({
+        SequelizeModule.forRootAsync({
             imports: [ConfigModule],
-            useFactory: (configService: ConfigService): MongooseModuleOptions => ({
-                uri: configService.get<string>('FF_MONGO'),
-            }),
             inject: [ConfigService],
+            useFactory: (cs: ConfigService) => {
+                return {
+                    dialect: 'postgres',
+                    host: cs.get('FF_DB_HOST'),
+                    port: cs.get('FF_DB_PORT'),
+                    username: cs.get('FF_DB_USERNAME'),
+                    password: cs.get('FF_DB_PASSWORD'),
+                    database: cs.get('FF_DB_DATABASE_NAME'),
+                    models: [User],
+                    autoLoadModels: true,
+                    synchronize: true,
+                }
+            }
         }),
         UserModule,
         TelegramModule,

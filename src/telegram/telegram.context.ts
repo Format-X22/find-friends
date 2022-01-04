@@ -1,6 +1,6 @@
 import { UserService } from '../user/user.service';
 import { TelegramService } from './telegram.service';
-import { User } from '../user/user.schema';
+import { User } from '../user/user.model';
 
 export class TelegramContext<TInboundMessage = string> {
     constructor(

@@ -1,8 +1,4 @@
-import { Document } from 'mongoose';
-import * as mongoose from 'mongoose';
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-
-@Schema({ versionKey: false })
+/*@Schema({ versionKey: false })
 export class RatingDefinition {
     _id?: mongoose.Schema.Types.ObjectId | string;
 
@@ -40,3 +36,4 @@ export class PlayDefinition {
 
 export type Play = PlayDefinition & Document;
 export const PlaySchema: mongoose.Schema<Play> = SchemaFactory.createForClass<PlayDefinition, Play>(PlayDefinition);
+*/

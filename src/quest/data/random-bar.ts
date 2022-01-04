@@ -1,7 +1,6 @@
-import { QuestDefinition } from '../quest.schema';
 import { ECharacterOptions } from '../../game/options.scenario';
 
-export const RandomBar: QuestDefinition = {
+export const RandomBar = {
     humanId: 'RandomBar',
     name: 'Рандом бар',
     characters: [ECharacterOptions.FULL_FUN, ECharacterOptions.MORE_FUN, ECharacterOptions.BALANCE],

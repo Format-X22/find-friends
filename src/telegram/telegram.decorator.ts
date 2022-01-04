@@ -4,23 +4,35 @@ type TSavePath<T> = (statePath?: string) => T;
 type THandlersPoints = Set<string>;
 type THandlersByClass = Map<Function, THandlersPoints>;
 
-export type THandlers = Map<string, [new () => object, string]>;
+type THandlerTuple = {
+    handlerClass: new () => object;
+    handlerMethodName: string;
+    isPhotoAllowed: boolean;
+};
+export type THandlers = Map<string, THandlerTuple>;
 
 const handlersByClass: THandlersByClass = new Map();
+const handlersWithPhotoByClass: THandlersByClass = new Map();
 export const handlers: THandlers = new Map();
 
 export const TgController: TSavePath<ClassDecorator> = (stateSection: string): ClassDecorator => {
-    return applyDecorators(Injectable, (target: Function): void => {
-        const targetHandlers: THandlersPoints = handlersByClass.get(target);
+    return applyDecorators(Injectable, (handlerClass: new () => object): void => {
+        const targetHandlers: THandlersPoints = handlersByClass.get(handlerClass);
+        const targetHandlersWithPhoto: THandlersPoints = handlersWithPhotoByClass.get(handlerClass);
 
         if (!targetHandlers) {
             return;
         }
 
-        for (const handlerName of targetHandlers) {
-            let state: string = `${stateSection}->${handlerName}`;
+        for (const handlerMethodName of targetHandlers) {
+            let state: string = `${stateSection}->${handlerMethodName}`;
+            const isPhotoAllowed = targetHandlersWithPhoto?.has(handlerMethodName);
 
-            handlers.set(state, [target as new () => object, handlerName]);
+            handlers.set(state, {
+                handlerClass,
+                handlerMethodName,
+                isPhotoAllowed,
+            });
         }
     });
 };
@@ -39,5 +51,16 @@ export const TgStateHandler: TSavePath<MethodDecorator> = (statePoint?: string):
     };
 };
 
-// TODO Support photo handler
-export const TgSupportPhoto: void = null;
+export const TgAllowPhoto: TSavePath<MethodDecorator> = (statePoint?: string): MethodDecorator => {
+    return (target: object, propertyKey: string): void => {
+        let targetHandlersWithPhoto: THandlersPoints = handlersWithPhotoByClass.get(target.constructor);
+
+        if (!targetHandlersWithPhoto) {
+            targetHandlersWithPhoto = new Set();
+
+            handlersWithPhotoByClass.set(target.constructor, targetHandlersWithPhoto);
+        }
+
+        targetHandlersWithPhoto.add(statePoint || propertyKey);
+    };
+};

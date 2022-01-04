@@ -2,7 +2,7 @@ import * as TelegramBot from 'node-telegram-bot-api';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { handlers } from './telegram.decorator';
 import { ConfigService } from '@nestjs/config';
-import { User } from '../user/user.schema';
+import { User } from '../user/user.model';
 import { UserService } from '../user/user.service';
 import { ModuleRef } from '@nestjs/core';
 import { KeyboardButton } from 'node-telegram-bot-api';
@@ -20,8 +20,8 @@ export class TelegramService implements OnModuleInit {
         this.bot = new TelegramBot(this.configService.get('FF_TG_KEY'), { polling: true });
         this.admins = JSON.parse(this.configService.get('FF_ADMINS'));
 
-        this.bot.on('message', async (message: TelegramBot.Message, metadata: TelegramBot.Metadata): Promise<void> => {
-            await this.tryHandle(message, async (): Promise<void> => await this.handleAnyMessage(message, metadata));
+        this.bot.on('message', async (message: TelegramBot.Message, metadata: TelegramBot.Metadata) => {
+            await this.tryHandle(message, async () => await this.handleAnyMessage(message, metadata));
         });
     }
 
@@ -60,20 +60,27 @@ export class TelegramService implements OnModuleInit {
                 message,
                 this.admins.includes(user.username),
             );
-            const [target, methodName]: [new () => object, string] = handlers.get(state);
+            const { handlerClass, handlerMethodName } = handlers.get(state);
 
-            this.moduleRef.get(target, { strict: false })[methodName](context);
+            this.moduleRef.get(handlerClass, { strict: false })[handlerMethodName](context);
         });
     }
 
     private async handleAnyMessage(message: TelegramBot.Message, metadata: TelegramBot.Metadata): Promise<void> {
+        const user: User = await this.userService.getUser(message);
+
+        if (user.isBanned) {
+            await this.sendBunMessage(message);
+            return;
+        }
+
         switch (metadata.type) {
             case 'text':
-                await this.handleText(message);
+                await this.handleText(user, message);
                 break;
 
             case 'photo':
-                await this.handlePhoto(message);
+                await this.handlePhoto(user, message);
                 break;
 
             case 'audio':
@@ -121,21 +128,14 @@ export class TelegramService implements OnModuleInit {
         }
     }
 
-    private async handleText(message: TelegramBot.Message): Promise<void> {
-        const user: User = await this.userService.getUser(message);
-
-        if (user.isBanned) {
-            await this.sendBunMessage(message);
-            return;
-        }
-
+    private async handleText(user: User, message: TelegramBot.Message): Promise<void> {
         let state: string = user.state;
 
-        if (!user.state || message.text === '/start') {
-            state = 'root->root'
+        if (!user.state || message.text === '/start' || message.text === '/reset') {
+            state = 'root->root';
         }
 
-        const [target, methodName]: [new () => object, string] = handlers.get(state);
+        const { handlerClass, handlerMethodName } = handlers.get(state);
         const context: TelegramContext = new TelegramContext(
             this.userService,
             this,
@@ -144,19 +144,33 @@ export class TelegramService implements OnModuleInit {
             this.admins.includes(user.username),
         );
 
-        this.moduleRef.get(target, { strict: false })[methodName](context);
+        this.moduleRef.get(handlerClass, { strict: false })[handlerMethodName](context);
     }
 
-    private async handlePhoto(message: TelegramBot.Message): Promise<void> {
-        const user: User = await this.userService.getUser(message);
+    private async handlePhoto(user: User, message: TelegramBot.Message): Promise<void> {
+        let state: string = user.state;
 
-        if (user.isBanned) {
-            await this.sendBunMessage(message);
+        const { handlerClass, handlerMethodName, isPhotoAllowed } = handlers.get(state);
+
+        if (!isPhotoAllowed) {
+            await this.justSend(
+                message,
+                'Неожиданно...' +
+                    ' В этом пункте диалога бот в картинки то и не умеет,' +
+                    ' но там что-то прикольное ведь, да? :)',
+            );
             return;
         }
 
-        // TODO -
-        await this.justSend(message, '[временно отключено]');
+        const context: TelegramContext = new TelegramContext(
+            this.userService,
+            this,
+            user,
+            message.text,
+            this.admins.includes(user.username),
+        );
+
+        this.moduleRef.get(handlerClass, { strict: false })[handlerMethodName](context);
     }
 
     private async sendBunMessage(message: Pick<TelegramBot.Message, 'chat'>): Promise<void> {
