@@ -1,6 +1,6 @@
-import { TgController, TgStateHandler } from '../telegram/telegram.decorator';
-import { TelegramContext } from '../telegram/telegram.context';
-import { QuestService } from '../quest/quest.service';
+import { TgController, TgStateHandler } from '../../telegram/telegram.decorator';
+import { TelegramContext } from '../../telegram/telegram.context';
+import { QuestService } from '../../quest/quest.service';
 
 enum EBackButton {
     BACK = '(назад)',

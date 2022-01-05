@@ -1,17 +1,15 @@
 import { Global, Module } from '@nestjs/common';
-import { RootScenario } from './root.scenario';
-import { PayScenario } from './pay.scenario';
-import { QuestScenario } from './quest.scenario';
-import { OptionsScenario } from './options.scenario';
 import { QuestModule } from '../quest/quest.module';
-import { AdminScenario } from './admin.scenario';
-import { SequelizeModule } from '@nestjs/sequelize';
-import { User } from '../user/user.model';
+import { AdminModule } from './admin/admin.module';
+import { InviteModule } from './invite/invite.module';
+import { OptionsModule } from './options/options.module';
+import { PayModule } from './pay/pay.module';
+import { RootModule } from './root/root.module';
+import { EditorModule } from './editor/editor.module';
 
 @Global()
 @Module({
-    imports: [QuestModule, SequelizeModule.forFeature([User])],
-    providers: [RootScenario, PayScenario, QuestScenario, OptionsScenario, AdminScenario],
-    exports: [RootScenario, PayScenario, QuestScenario, OptionsScenario, AdminScenario],
+    imports: [QuestModule, AdminModule, InviteModule, OptionsModule, PayModule, RootModule, EditorModule],
+    providers: [],
 })
 export class GameModule {}

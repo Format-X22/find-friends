@@ -1,5 +1,5 @@
-import { TgController, TgStateHandler } from '../telegram/telegram.decorator';
-import { TelegramContext } from '../telegram/telegram.context';
+import { TgController, TgStateHandler } from '../../telegram/telegram.decorator';
+import { TelegramContext } from '../../telegram/telegram.context';
 
 enum EOptionsList {
     CHARACTER = 'Характер заданий',

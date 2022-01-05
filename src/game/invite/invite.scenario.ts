@@ -1,4 +1,4 @@
-import { TgController } from '../telegram/telegram.decorator';
+import { TgController } from '../../telegram/telegram.decorator';
 
 @TgController('invite')
 export class InviteScenario {

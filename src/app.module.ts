@@ -5,7 +5,7 @@ import { UserModule } from './user/user.module';
 import { QuestModule } from './quest/quest.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { User } from './user/user.model';
+import { Invite, User } from './user/user.model';
 
 @Module({
     imports: [
@@ -25,9 +25,10 @@ import { User } from './user/user.model';
                     username: cs.get('FF_DB_USERNAME'),
                     password: cs.get('FF_DB_PASSWORD'),
                     database: cs.get('FF_DB_DATABASE_NAME'),
-                    models: [User],
+                    models: [User, Invite],
                     autoLoadModels: true,
                     synchronize: true,
+                    logging: false,
                 }
             }
         }),

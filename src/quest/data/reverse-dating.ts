@@ -1,4 +1,4 @@
-import { ECharacterOptions } from '../../game/options.scenario';
+import { ECharacterOptions } from '../../game/options/options.scenario';
 
 export const ReverseDating = {
     humanId: 'ReverseDating',

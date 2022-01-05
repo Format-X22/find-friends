@@ -1,7 +1,7 @@
-import { TgController, TgStateHandler } from '../telegram/telegram.decorator';
-import { TelegramContext } from '../telegram/telegram.context';
-import { User } from '../user/user.model';
-import { TelegramService } from '../telegram/telegram.service';
+import { TgController, TgStateHandler } from '../../telegram/telegram.decorator';
+import { TelegramContext } from '../../telegram/telegram.context';
+import { User } from '../../user/user.model';
+import { TelegramService } from '../../telegram/telegram.service';
 import { InjectModel } from '@nestjs/sequelize';
 
 enum EAdminOptions {

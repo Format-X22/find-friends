@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as TelegramBot from 'node-telegram-bot-api';
 import { User } from './user.model';
-import { ECharacterOptions, EIntensiveOptions } from '../game/options.scenario';
+import { ECharacterOptions, EIntensiveOptions } from '../game/options/options.scenario';
 import { InjectModel } from '@nestjs/sequelize';
 
 @Injectable()

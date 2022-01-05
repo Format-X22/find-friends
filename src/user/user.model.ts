@@ -1,5 +1,6 @@
-import { ECharacterOptions, EIntensiveOptions } from '../game/options.scenario';
+import { ECharacterOptions, EIntensiveOptions } from '../game/options/options.scenario';
 import { Column, DataType, HasMany, Model, Table, Unique } from 'sequelize-typescript';
+import { Invite } from '../game/invite/invite.model';
 
 @Table
 export class User extends Model {
@@ -45,4 +46,7 @@ export class User extends Model {
 
     @HasMany(() => User, 'id')
     alreadyPlaysWith: Array<User>;
+
+    @HasMany(() => Invite, 'inviterUsername')
+    invites: Array<Invite>;
 }
