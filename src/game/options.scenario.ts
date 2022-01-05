@@ -2,10 +2,11 @@ import { TgController, TgStateHandler } from '../telegram/telegram.decorator';
 import { TelegramContext } from '../telegram/telegram.context';
 
 enum EOptionsList {
-    //CHARACTER = 'Характер заданий',
-    //INTENSIVE = 'Интенсивность игры',
-    //ABOUT = 'Чуть-чуть о себе',
+    CHARACTER = 'Характер заданий',
+    INTENSIVE = 'Интенсивность игры',
+    ABOUT = 'Чуть-чуть о себе',
     PAUSE = 'Приостановить новые задания',
+    PAY = 'Платежи',
     BACK = '(назад)',
 }
 
@@ -29,8 +30,11 @@ export enum EIntensiveOptions {
 }
 
 enum EAboutOptions {
-    CANCEL = '(отмена)',
+    CANCEL = '(отменить)',
+    CLEAR = '(стереть)',
 }
+
+// TODO Validation
 
 @TgController('options')
 export class OptionsScenario {
@@ -38,12 +42,11 @@ export class OptionsScenario {
     async optionsList(ctx: TelegramContext): Promise<void> {
         await ctx.send(
             'Отлично, тут можно настроить игру под себя, ну и рассказать другим чуть-чуть о себе.' +
-                /*'\n\nСейчас у тебя такие настройки:' +
+                '\n\nСейчас у тебя такие настройки:' +
                 '\n\n' +
                 `Характер заданий => ${ctx.user.character}\n` +
                 `Интенсивность игры => ${ctx.user.intensive}\n` +
-                `О себе => ${ctx.user.about || '<пусто>'}\n`*/
-            '\n(но пока остальные настройки ещё скрыты от глаз)',
+                `О себе => ${ctx.user.about || '<пусто>'}\n`,
             ctx.buttonList(EOptionsList),
         );
         await ctx.setState('options->optionsSelect');
@@ -52,7 +55,7 @@ export class OptionsScenario {
     @TgStateHandler()
     async optionsSelect(ctx: TelegramContext<EOptionsList>): Promise<void> {
         switch (ctx.message) {
-            /*case EOptionsList.CHARACTER:
+            case EOptionsList.CHARACTER:
                 await ctx.send(
                     'Тут можно настроить характер игры - ненапряжный отдых или суровое саморазвитие?' +
                         ' А может и того и другого? Или просто пообщаться в теплой компании на отвлеченные темы?' +
@@ -81,11 +84,11 @@ export class OptionsScenario {
             case EOptionsList.ABOUT:
                 await ctx.send(
                     'Можно написать чуть-чуть о себе, эта информация будет показана' +
-                        ' вашим партнерам по заданию перед началом. Не пишите много - максимум 140 символов.',
+                        ' вашим партнерам по заданию перед началом.',
                     ctx.buttonList(EAboutOptions),
                 );
                 await ctx.setState('options->aboutInput');
-                break;*/
+                break;
 
             case EOptionsList.PAUSE:
                 await this.pauseGame(ctx);
@@ -162,17 +165,20 @@ export class OptionsScenario {
                 await this.cancel(ctx);
                 return;
 
+            case EAboutOptions.CLEAR:
+                ctx.user.about = null;
+                break;
+
             default:
-                if (ctx.message.length > 140) {
-                    await ctx.send('Длинннновато получилось, получится уместить в 140 символов?');
+                if (ctx.message.length > 2048) {
+                    await ctx.send('Длинннновато получилось, получится уместить в 2048 символов?');
                     return;
                 }
 
                 ctx.user.about = ctx.message;
-
-                await ctx.user.save();
         }
 
+        await ctx.user.save();
         await this.successSave(ctx);
     }
 
@@ -194,8 +200,8 @@ export class OptionsScenario {
         await ctx.send('Хорошо, игра поставлена на паузу. Возвращайся когда захочешь :)');
 
         ctx.user.isActive = false;
-        await ctx.user.save();
 
+        await ctx.user.save();
         await ctx.redirect('root->root');
     }
 }

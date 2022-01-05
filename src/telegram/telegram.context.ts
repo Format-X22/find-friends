@@ -19,9 +19,9 @@ export class TelegramContext<TInboundMessage = string> {
         await this.userService.setState(this.user, state);
     }
 
-    async redirect(state: string, message?: string): Promise<void> {
+    async redirect(state: string, withMessageForState?: string): Promise<void> {
         await this.setState(state);
-        await this.telegramService.redirectToHandler(this.user, state, message);
+        await this.telegramService.redirectToHandler(this.user, state, withMessageForState);
     }
 
     buttonList(buttons: Record<string, string>): Array<Array<string>> {

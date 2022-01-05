@@ -2,12 +2,13 @@ import { TgController, TgStateHandler } from '../telegram/telegram.decorator';
 import { TelegramContext } from '../telegram/telegram.context';
 import { User } from '../user/user.model';
 import { TelegramService } from '../telegram/telegram.service';
+import { InjectModel } from '@nestjs/sequelize';
 
 enum EAdminOptions {
     DEACTIVATE = 'Деактивировать',
     REACTIVATE = 'Снова активировать',
-    SET_BUN = 'Забанить',
-    REMOVE_BUN = 'Разбанить',
+    SET_BAN = 'Забанить',
+    REMOVE_BAN = 'Разбанить',
     MASS_SEND = 'Массовая рассылка',
     BACK = '(назад)',
 }
@@ -18,9 +19,7 @@ enum ECancelButton {
 
 @TgController('admin')
 export class AdminScenario {
-    constructor(
-        private telegramService: TelegramService,
-    ) {}
+    constructor(@InjectModel(User) private userModel: typeof User, private telegramService: TelegramService) {}
 
     @TgStateHandler()
     async mainMenu(ctx: TelegramContext): Promise<void> {
@@ -41,14 +40,14 @@ export class AdminScenario {
                 await ctx.setState('admin->reactivateUserInput');
                 break;
 
-            case EAdminOptions.SET_BUN:
+            case EAdminOptions.SET_BAN:
                 await ctx.send('Введите ник');
-                await ctx.setState('admin->setBunUserInput');
+                await ctx.setState('admin->setBanUserInput');
                 break;
 
-            case EAdminOptions.REMOVE_BUN:
+            case EAdminOptions.REMOVE_BAN:
                 await ctx.send('Введите ник');
-                await ctx.setState('admin->removeBunUserInput');
+                await ctx.setState('admin->removeBanUserInput');
                 break;
 
             case EAdminOptions.MASS_SEND:
@@ -68,78 +67,78 @@ export class AdminScenario {
 
     @TgStateHandler()
     async deactivateUserInput(ctx: TelegramContext): Promise<void> {
-        /*const ok: boolean = await this.updateUser(ctx, { $set: { isActive: false, state: 'root->root' } });
+        const ok: boolean = await this.updateUser(ctx, { isActive: false, state: 'root->root' });
 
         if (!ok) {
             return;
         }
 
         await ctx.send('Пользователь деактивирован');
-        await ctx.redirect('admin->mainMenu');*/
+        await ctx.redirect('admin->mainMenu');
     }
 
     @TgStateHandler()
     async reactivateUserInput(ctx: TelegramContext): Promise<void> {
-        /*const ok: boolean = await this.updateUser(ctx, { $set: { isActive: true, state: 'root->root' } });
+        const ok: boolean = await this.updateUser(ctx, { isActive: true, state: 'root->root' });
 
         if (!ok) {
             return;
         }
 
         await ctx.send('Пользователь снова активирован');
-        await ctx.redirect('admin->mainMenu');*/
+        await ctx.redirect('admin->mainMenu');
     }
 
     @TgStateHandler()
-    async setBunUserInput(ctx: TelegramContext): Promise<void> {
-        /*const ok: boolean = await this.updateUser(ctx, { $set: { isBanned: true, state: 'root->root' } });
+    async setBanUserInput(ctx: TelegramContext): Promise<void> {
+        const ok: boolean = await this.updateUser(ctx, { isBanned: true, state: 'root->root' });
 
         if (!ok) {
             return;
         }
 
         await ctx.send('Пользователь забанен');
-        await ctx.redirect('admin->mainMenu');*/
+        await ctx.redirect('admin->mainMenu');
     }
 
     @TgStateHandler()
-    async removeBunUserInput(ctx: TelegramContext): Promise<void> {
-        /*const ok: boolean = await this.updateUser(ctx, { $set: { isBanned: false, state: 'root->root' } });
+    async removeBanUserInput(ctx: TelegramContext): Promise<void> {
+        const ok: boolean = await this.updateUser(ctx, { isBanned: false, state: 'root->root' });
 
         if (!ok) {
             return;
         }
 
         await ctx.send('Пользователь разбанен');
-        await ctx.redirect('admin->mainMenu');*/
+        await ctx.redirect('admin->mainMenu');
     }
 
     @TgStateHandler()
     async massSendInput(ctx: TelegramContext<ECancelButton | string>): Promise<void> {
-        /*await ctx.redirect('admin->mainMenu');
-
         if (ctx.message === ECancelButton.CANCEL) {
+            await ctx.redirect('admin->mainMenu');
             return;
         }
 
-        const users: Array<User> = await this.userModel.find(
-            { isActive: true, isBanned: false },
-            { _id: false, chatId: true },
-        );
+        await ctx.send('Отправляю...');
+
+        const users: Array<User> = await this.userModel.findAll({ where: { isActive: true, isBanned: false } });
 
         for (const user of users) {
             await this.telegramService.sendText(user, ctx.message);
-        }*/
+        }
+
+        await ctx.redirect('admin->mainMenu');
     }
 
-    private async updateUser(ctx: TelegramContext, update: User): Promise<boolean> {
-        /*let username: string = ctx.message.trim();
+    private async updateUser(ctx: TelegramContext, update: Partial<User>): Promise<boolean> {
+        let username: string = ctx.message.trim();
 
         if (username[0] === '@') {
             username = username.slice(1, username.length);
         }
 
-        const user: User = await this.userModel.findOne({ username });
+        const user: User = await this.userModel.findOne({ where: { username } });
 
         if (!user) {
             await ctx.send('Пользователь НЕ НАЙДЕН');
@@ -147,8 +146,8 @@ export class AdminScenario {
             return false;
         }
 
-        await this.userModel.updateOne({ username }, update);
-         */
+        await user.update(update);
+
         return true;
     }
 }

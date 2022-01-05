@@ -2,9 +2,11 @@ import { TgController, TgStateHandler } from '../telegram/telegram.decorator';
 import { TelegramContext } from '../telegram/telegram.context';
 
 enum ERootButtons {
-    OPTIONS = 'Настройки',
     QUESTS = 'Задания',
+    OPTIONS = 'Настройки',
     NEWS = 'Новости и объявления',
+    INVITE = 'Инвайты',
+    EDITOR = 'Для творцов',
 }
 
 enum ERootAdminButtons {
@@ -15,12 +17,13 @@ enum EResumeButton {
     RESUME = 'Запустить игру!',
 }
 
-const excludeInInactive: Array<string> = [ERootButtons.OPTIONS];
+const excludeInInactive: Array<string> = [ERootButtons.OPTIONS, ERootButtons.QUESTS];
 
 @TgController('root')
 export class RootScenario {
     @TgStateHandler()
     async root(ctx: TelegramContext): Promise<void> {
+        // TODO -
         await ctx.send(
             'Добро пожаловать в случайный чай!' +
                 '\n\n' +
@@ -97,9 +100,7 @@ export class RootScenario {
         if (!ctx.user.isActive) {
             buttons = { ...EResumeButton, ...buttons };
             buttons = Object.fromEntries(
-                Object.entries(buttons).filter(
-                    ([key, value]: [string, string]): boolean => !excludeInInactive.includes(value),
-                ),
+                Object.entries(buttons).filter(([key, value]): boolean => !excludeInInactive.includes(value)),
             );
         }
 
