@@ -17,6 +17,9 @@ export class User extends Model {
     @Column(DataType.BOOLEAN)
     isBoring: boolean;
 
+    @Column(DataType.BOOLEAN)
+    isInvited: boolean;
+
     @Column(DataType.STRING(255))
     firstName: string;
 
@@ -44,9 +47,9 @@ export class User extends Model {
     @Column(DataType.STRING(2048))
     about: string;
 
-    @HasMany(() => User, 'id')
-    alreadyPlaysWith: Array<User>;
+    // TODO In separate table
+    //alreadyPlaysWith: Array<User>;
 
-    @HasMany(() => Invite, 'inviterUsername')
+    @HasMany(() => Invite)
     invites: Array<Invite>;
 }

@@ -5,7 +5,8 @@ import { UserModule } from './user/user.module';
 import { QuestModule } from './quest/quest.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { Invite, User } from './user/user.model';
+import { User } from './user/user.model';
+import { Invite } from './game/invite/invite.model';
 
 @Module({
     imports: [

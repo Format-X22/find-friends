@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { INestApplicationContext } from '@nestjs/common';
-import { Invite, User } from './user/user.model';
+import {  User } from './user/user.model';
+import { Invite } from './game/invite/invite.model';
 
 async function bootstrap(): Promise<void> {
     await NestFactory.createApplicationContext(AppModule);

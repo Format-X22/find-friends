@@ -25,13 +25,12 @@ export class RootScenario {
     async root(ctx: TelegramContext): Promise<void> {
         // TODO -
         await ctx.send(
-            'Добро пожаловать в случайный чай!' +
+            'Добро пожаловать!' +
                 '\n\n' +
-                'Это бот, который найдет тебе напарника на встречу в формате случайного чая!' +
-                '\nСо временем тут будут появляться ещё фичи, скучно не будет :)' +
+                '(описание появится позднее)' +
                 '\n\nПишите отзывы и предложения - @oPavlov' +
                 '\n\nНу а все новости, объявления и прочее вы можете получать по этой ссылке:' +
-                '\nhttps://t.me/joinchat/Y055xr64tcViMTdi',
+                '\n(тоже появится позже)',
             ctx.buttonList(this.makeMainMenuButtons(ctx)),
         );
 
@@ -71,6 +70,10 @@ export class RootScenario {
                 await ctx.redirect('root->resume');
                 break;
 
+            case ERootButtons.INVITE:
+                await ctx.redirect('invite->mainMenu');
+                break;
+
             default:
                 await ctx.send('Похоже такой настройки нет...');
         }
@@ -79,7 +82,7 @@ export class RootScenario {
     @TgStateHandler()
     async showNews(ctx: TelegramContext): Promise<void> {
         await ctx.setState('root->mainMenuSelect');
-        await ctx.send('Все новости и объявления публикуются тут:\nhttps://t.me/joinchat/Y055xr64tcViMTdi');
+        await ctx.send('Все новости и объявления публикуются тут:\n(появится позже)');
     }
 
     @TgStateHandler()

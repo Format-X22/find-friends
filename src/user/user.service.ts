@@ -3,6 +3,7 @@ import * as TelegramBot from 'node-telegram-bot-api';
 import { User } from './user.model';
 import { ECharacterOptions, EIntensiveOptions } from '../game/options/options.scenario';
 import { InjectModel } from '@nestjs/sequelize';
+import { Invite } from '../game/invite/invite.model';
 
 @Injectable()
 export class UserService {
@@ -18,7 +19,7 @@ export class UserService {
             username: message.chat.username,
         };
 
-        let user = await this.userModel.findOne({ where: { chatId: message.chat.id } });
+        let user = await this.userModel.findOne({ where: { chatId: message.chat.id }, include: [User, Invite] });
 
         if (user) {
             await user.update(tgValues);
