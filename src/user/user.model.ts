@@ -14,6 +14,9 @@ export class User extends Model {
     @Column(DataType.BOOLEAN)
     isBanned: boolean;
 
+    @Column(DataType.STRING(256))
+    banReason: string;
+
     @Column(DataType.BOOLEAN)
     isBoring: boolean;
 
