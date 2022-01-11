@@ -12,16 +12,28 @@ export class TelegramContext<TInboundMessage = string> {
     ) {}
 
     async send(message: string, buttons?: Array<Array<string>> | false): Promise<void> {
-        await this.telegramService.sendText(this.user, message, buttons);
+        await this.sendFor(this.user, message, buttons);
+    }
+
+    async sendFor(user: User, message: string, buttons?: Array<Array<string>> | false): Promise<void> {
+        await this.telegramService.sendText(user, message, buttons);
     }
 
     async setState(state: string): Promise<void> {
-        await this.userService.setState(this.user, state);
+        await this.setStateFor(this.user, state);
+    }
+
+    async setStateFor(user: User, state: string): Promise<void> {
+        await this.userService.setState(user, state);
     }
 
     async redirect(state: string, withMessageForState?: string): Promise<void> {
-        await this.setState(state);
-        await this.telegramService.redirectToHandler(this.user, state, withMessageForState);
+        await this.redirectFor(this.user, state, withMessageForState);
+    }
+
+    async redirectFor(user: User, state: string, withMessageForState?: string): Promise<void> {
+        await this.setStateFor(user, state);
+        await this.telegramService.redirectToHandler(user, state, withMessageForState);
     }
 
     buttonList(buttons: Record<string, string>): Array<Array<string>> {

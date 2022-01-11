@@ -70,7 +70,12 @@ export class TelegramService implements OnModuleInit {
         const user: User = await this.userService.getUser(message);
 
         if (user.isBanned) {
-            await this.sendBunMessage(message);
+            await this.sendBanMessage(message);
+            return;
+        }
+
+        if (!user.isInvited) {
+            await this.sendInviteMessage(message);
             return;
         }
 
@@ -173,8 +178,18 @@ export class TelegramService implements OnModuleInit {
         this.moduleRef.get(handlerClass, { strict: false })[handlerMethodName](context);
     }
 
-    private async sendBunMessage(message: Pick<TelegramBot.Message, 'chat'>): Promise<void> {
+    private async sendBanMessage(message: Pick<TelegramBot.Message, 'chat'>): Promise<void> {
         await this.justSend(message, 'Похоже что вы забанены :(');
+    }
+
+    private async sendInviteMessage(message: Pick<TelegramBot.Message, 'chat'>): Promise<void> {
+        await this.justSend(
+            message,
+            'Привет!\n\n' +
+                'Так вышло, что для защиты от ботов и для дружелюбия окружения -' +
+                ' у нас тут чуть-чуть по приглашениям. Ты сможешь пользоваться' +
+                'всеми благами, как только кто-то тебя пригласит.',
+        );
     }
 
     private async justSend(message: Pick<TelegramBot.Message, 'chat'>, text: string): Promise<void> {

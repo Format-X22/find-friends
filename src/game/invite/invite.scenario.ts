@@ -43,6 +43,12 @@ export class InviteScenario {
             username = username.slice(1, username.length);
         }
 
+        if (username.startsWith('http')) {
+            const usernameSplit = username.split('/');
+
+            username = usernameSplit[usernameSplit.length - 1];
+        }
+
         const maybeInvitedUser = await User.findOne({ where: { username } });
 
         if (maybeInvitedUser && maybeInvitedUser.isInvited) {
@@ -65,8 +71,11 @@ export class InviteScenario {
 
         if (maybeInvitedUser) {
             maybeInvitedUser.isInvited = true;
+            maybeInvitedUser.state = 'root->root';
 
             await maybeInvitedUser.save();
+            await ctx.sendFor(maybeInvitedUser, `Вас пригласил @${ctx.user.username}!`, [['Отлично!']]);
+            await ctx.redirectFor(maybeInvitedUser, 'root->root');
         }
 
         await ctx.send('Пользователь успешно приглашен!\nВозможно пригласим кого-то ещё?');

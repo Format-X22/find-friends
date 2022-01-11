@@ -7,7 +7,10 @@ import { Invite } from '../game/invite/invite.model';
 
 @Injectable()
 export class UserService {
-    constructor(@InjectModel(User) private userModel: typeof User) {}
+    constructor(
+        @InjectModel(User) private userModel: typeof User,
+        @InjectModel(Invite) private inviteModel: typeof Invite,
+    ) {}
 
     async getUser(message: TelegramBot.Message): Promise<User> {
         const tgValues: Partial<User> = {
@@ -19,15 +22,18 @@ export class UserService {
             username: message.chat.username,
         };
 
-        let user = await this.userModel.findOne({ where: { chatId: message.chat.id }, include: [User, Invite] });
+        let user = await this.userModel.findOne({ where: { chatId: message.chat.id }, include: [Invite] });
 
         if (user) {
             await user.update(tgValues);
         } else {
+            const isInvited = await this.inviteModel.findOne({ where: { invitedUsername: tgValues.username } });
+
             user = await this.userModel.create({
                 chatId: message.chat.id,
                 character: ECharacterOptions.BALANCE,
                 intensive: EIntensiveOptions.MEDIUM,
+                isInvited: Boolean(isInvited),
                 ...tgValues,
             });
         }
