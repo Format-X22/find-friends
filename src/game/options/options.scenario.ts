@@ -1,5 +1,7 @@
 import { TgController, TgStateHandler } from '../../telegram/telegram.decorator';
 import { TelegramContext } from '../../telegram/telegram.context';
+import { RootScenario } from '../root/root.scenario';
+import { ECharacterOptions, EIntensiveOptions } from '../../models/definition/user.model';
 
 enum EOptionsList {
     CHARACTER = 'Характер заданий',
@@ -10,22 +12,11 @@ enum EOptionsList {
     BACK = '(назад)',
 }
 
-export enum ECharacterOptions {
-    FULL_INTELLIGENCE = 'Максимально саморазвитие',
-    MORE_INTELLIGENCE = 'Побольше про саморазвитие',
-    BALANCE = 'Выбираю баланс',
-    MORE_FUN = 'Побольше веселья',
-    FULL_FUN = 'Максимальное веселье',
+export enum ECharacterOptionsExtraMenu {
     CANCEL = '(отмена)',
 }
 
-export enum EIntensiveOptions {
-    MAX = 'Максимальная',
-    HIGH = 'Высокая',
-    MEDIUM = 'Средняя',
-    LOW = 'Низкая',
-    MIN = 'Минимальная',
-    PAUSE = 'Приостановить новые задания',
+export enum EIntensiveOptionsExtraMenu {
     CANCEL = '(отмена)',
 }
 
@@ -36,7 +27,7 @@ enum EAboutOptions {
 
 // TODO Validation
 
-@TgController('options')
+@TgController()
 export class OptionsScenario {
     @TgStateHandler()
     async optionsList(ctx: TelegramContext): Promise<void> {
@@ -49,7 +40,7 @@ export class OptionsScenario {
                 `О себе => ${ctx.user.about || '<пусто>'}\n`,
             ctx.buttonList(EOptionsList),
         );
-        await ctx.setState('options->optionsSelect');
+        await ctx.setState<OptionsScenario>([OptionsScenario, 'optionsSelect']);
     }
 
     @TgStateHandler()
@@ -64,9 +55,9 @@ export class OptionsScenario {
                         ' "развлечения" если тебе и так хватает сложности и хочется просто и ненапряжно сбросить' +
                         ' мысли и поразвлекаться в компании близких по духу людей.' +
                         '\n\nОднако - рекомендуем попробовать и так и сяк - новый опыт это всегда яркое событие :)',
-                    ctx.buttonList(ECharacterOptions),
+                    ctx.buttonList({ ...ECharacterOptions, ...ECharacterOptionsExtraMenu }),
                 );
-                await ctx.setState('options->characterSelect');
+                await ctx.setState<OptionsScenario>([OptionsScenario, 'characterSelect']);
                 break;
 
             case EOptionsList.INTENSIVE:
@@ -76,9 +67,9 @@ export class OptionsScenario {
                         ' новые задания и тем больше их может быть параллельно.' +
                         ' Ну и наоборот :) Выбирай то что тебе комфортно - добавить' +
                         ' немного нового в жизнь или сделать её сразу на порядок ярче?',
-                    ctx.buttonList(EIntensiveOptions),
+                    ctx.buttonList({ ...EIntensiveOptions, ...EIntensiveOptionsExtraMenu }),
                 );
-                await ctx.setState('options->intensiveSelect');
+                await ctx.setState<OptionsScenario>([OptionsScenario, 'intensiveSelect']);
                 break;
 
             case EOptionsList.ABOUT:
@@ -87,7 +78,7 @@ export class OptionsScenario {
                         ' вашим партнерам по заданию перед началом.',
                     ctx.buttonList(EAboutOptions),
                 );
-                await ctx.setState('options->aboutInput');
+                await ctx.setState<OptionsScenario>([OptionsScenario, 'aboutInput']);
                 break;
 
             case EOptionsList.PAUSE:
@@ -95,17 +86,17 @@ export class OptionsScenario {
                 break;
 
             case EOptionsList.BACK:
-                await ctx.redirect('root->mainMenu');
+                await ctx.redirect<RootScenario>([RootScenario, 'mainMenu']);
                 break;
 
             default:
                 await ctx.send('Ой, а такой настройки нет...');
-                await ctx.redirect('options->optionsList');
+                await ctx.redirect<OptionsScenario>([OptionsScenario, 'optionsList']);
         }
     }
 
     @TgStateHandler()
-    async characterSelect(ctx: TelegramContext<ECharacterOptions>): Promise<void> {
+    async characterSelect(ctx: TelegramContext<ECharacterOptions & ECharacterOptionsExtraMenu>): Promise<void> {
         switch (ctx.message) {
             case ECharacterOptions.FULL_FUN:
             case ECharacterOptions.MORE_FUN:
@@ -117,7 +108,7 @@ export class OptionsScenario {
                 await ctx.user.save();
                 break;
 
-            case ECharacterOptions.CANCEL:
+            case ECharacterOptionsExtraMenu.CANCEL:
                 await this.cancel(ctx);
                 return;
 
@@ -130,7 +121,7 @@ export class OptionsScenario {
     }
 
     @TgStateHandler()
-    async intensiveSelect(ctx: TelegramContext<EIntensiveOptions>): Promise<void> {
+    async intensiveSelect(ctx: TelegramContext<EIntensiveOptions & EIntensiveOptionsExtraMenu>): Promise<void> {
         switch (ctx.message) {
             case EIntensiveOptions.MAX:
             case EIntensiveOptions.HIGH:
@@ -146,7 +137,7 @@ export class OptionsScenario {
                 await this.pauseGame(ctx);
                 return;
 
-            case EIntensiveOptions.CANCEL:
+            case EIntensiveOptionsExtraMenu.CANCEL:
                 await this.cancel(ctx);
                 return;
 
@@ -184,7 +175,7 @@ export class OptionsScenario {
 
     private async cancel(ctx: TelegramContext): Promise<void> {
         await ctx.send('Отменено...');
-        await ctx.redirect('options->optionsList');
+        await ctx.redirect<OptionsScenario>([OptionsScenario, 'optionsList']);
     }
 
     private async unknownOption(ctx: TelegramContext): Promise<void> {
@@ -193,7 +184,7 @@ export class OptionsScenario {
 
     private async successSave(ctx: TelegramContext): Promise<void> {
         await ctx.send('Изменения сохранены.');
-        await ctx.redirect('options->optionsList');
+        await ctx.redirect<OptionsScenario>([OptionsScenario, 'optionsList']);
     }
 
     private async pauseGame(ctx: TelegramContext): Promise<void> {
@@ -202,6 +193,6 @@ export class OptionsScenario {
         ctx.user.isActive = false;
 
         await ctx.user.save();
-        await ctx.redirect('root->root');
+        await ctx.redirect<RootScenario>([RootScenario, 'root']);
     }
 }

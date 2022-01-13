@@ -1,6 +1,22 @@
-import { ECharacterOptions, EIntensiveOptions } from '../game/options/options.scenario';
 import { Column, DataType, HasMany, Model, Table, Unique } from 'sequelize-typescript';
-import { Invite } from '../game/invite/invite.model';
+import { Invite } from './invite.model';
+
+export enum ECharacterOptions {
+    FULL_INTELLIGENCE = 'Максимально саморазвитие',
+    MORE_INTELLIGENCE = 'Побольше про саморазвитие',
+    BALANCE = 'Выбираю баланс',
+    MORE_FUN = 'Побольше веселья',
+    FULL_FUN = 'Максимальное веселье',
+}
+
+export enum EIntensiveOptions {
+    MAX = 'Максимальная',
+    HIGH = 'Высокая',
+    MEDIUM = 'Средняя',
+    LOW = 'Низкая',
+    MIN = 'Минимальная',
+    PAUSE = 'Приостановить новые задания',
+}
 
 @Table
 export class User extends Model {

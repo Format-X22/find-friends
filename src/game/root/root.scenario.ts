@@ -1,5 +1,9 @@
 import { TgController, TgStateHandler } from '../../telegram/telegram.decorator';
 import { TelegramContext } from '../../telegram/telegram.context';
+import { OptionsScenario } from '../options/options.scenario';
+import { QuestScenario } from '../quest/quest.scenario';
+import { AdminScenario } from '../admin/admin.scenario';
+import { InviteScenario } from '../invite/invite.scenario';
 
 enum ERootButtons {
     QUESTS = 'Задания',
@@ -19,7 +23,7 @@ enum EResumeButton {
 
 const excludeInInactive: Array<string> = [ERootButtons.OPTIONS, ERootButtons.QUESTS];
 
-@TgController('root')
+@TgController()
 export class RootScenario {
     @TgStateHandler()
     async root(ctx: TelegramContext): Promise<void> {
@@ -34,7 +38,7 @@ export class RootScenario {
             ctx.buttonList(this.makeMainMenuButtons(ctx)),
         );
 
-        await ctx.setState('root->mainMenuSelect');
+        await ctx.setState<RootScenario>([RootScenario, 'mainMenuSelect']);
 
         if (!ctx.user.isActive) {
             await ctx.send('Игра выключена, но ты всегда можешь запустить её!');
@@ -44,34 +48,34 @@ export class RootScenario {
     @TgStateHandler()
     async mainMenu(ctx: TelegramContext): Promise<void> {
         await ctx.send('Возвращаю тебя в главный диалог...', ctx.buttonList(this.makeMainMenuButtons(ctx)));
-        await ctx.setState('root->mainMenuSelect');
+        await ctx.setState<RootScenario>([RootScenario, 'mainMenuSelect']);
     }
 
     @TgStateHandler()
     async mainMenuSelect(ctx: TelegramContext<ERootButtons & ERootAdminButtons & EResumeButton>): Promise<void> {
         switch (ctx.message) {
             case ERootButtons.OPTIONS:
-                await ctx.redirect('options->optionsList');
+                await ctx.redirect<OptionsScenario>([OptionsScenario, 'optionsList']);
                 break;
 
             case ERootButtons.QUESTS:
-                await ctx.redirect('quest->questList');
+                await ctx.redirect<QuestScenario>([QuestScenario, 'questList']);
                 break;
 
             case ERootButtons.NEWS:
-                await ctx.redirect('root->showNews');
+                await ctx.redirect<RootScenario>([RootScenario, 'showNews']);
                 break;
 
             case ERootAdminButtons.ADMIN:
-                await ctx.redirect('admin->mainMenu');
+                await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
                 break;
 
             case EResumeButton.RESUME:
-                await ctx.redirect('root->resume');
+                await ctx.redirect<RootScenario>([RootScenario, 'resume']);
                 break;
 
             case ERootButtons.INVITE:
-                await ctx.redirect('invite->mainMenu');
+                await ctx.redirect<InviteScenario>([InviteScenario, 'mainMenu']);
                 break;
 
             default:
@@ -81,7 +85,7 @@ export class RootScenario {
 
     @TgStateHandler()
     async showNews(ctx: TelegramContext): Promise<void> {
-        await ctx.setState('root->mainMenuSelect');
+        await ctx.setState<RootScenario>([RootScenario, 'mainMenuSelect']);
         await ctx.send('Все новости и объявления публикуются тут:\n(появится позже)');
     }
 
@@ -90,7 +94,7 @@ export class RootScenario {
         ctx.user.isActive = true;
 
         await ctx.user.save();
-        await ctx.redirect('root->root');
+        await ctx.redirect<RootScenario>([RootScenario, 'root']);
     }
 
     private makeMainMenuButtons(ctx: TelegramContext): Record<string, string> {

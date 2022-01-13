@@ -1,6 +1,7 @@
 import { UserService } from '../user/user.service';
 import { TelegramService } from './telegram.service';
-import { User } from '../user/user.model';
+import { User } from '../models/definition/user.model';
+import { TState } from './telegram.decorator';
 
 export class TelegramContext<TInboundMessage = string> {
     constructor(
@@ -19,21 +20,21 @@ export class TelegramContext<TInboundMessage = string> {
         await this.telegramService.sendText(user, message, buttons);
     }
 
-    async setState(state: string): Promise<void> {
-        await this.setStateFor(this.user, state);
+    async setState<T>(state: TState<T>): Promise<void> {
+        await this.setStateFor<T>(this.user, state);
     }
 
-    async setStateFor(user: User, state: string): Promise<void> {
-        await this.userService.setState(user, state);
+    async setStateFor<T>(user: User, state: TState<T>): Promise<void> {
+        await this.userService.setState<T>(user, state);
     }
 
-    async redirect(state: string, withMessageForState?: string): Promise<void> {
-        await this.redirectFor(this.user, state, withMessageForState);
+    async redirect<T>(state: TState<T>, withMessageForState?: string): Promise<void> {
+        await this.redirectFor<T>(this.user, state, withMessageForState);
     }
 
-    async redirectFor(user: User, state: string, withMessageForState?: string): Promise<void> {
-        await this.setStateFor(user, state);
-        await this.telegramService.redirectToHandler(user, state, withMessageForState);
+    async redirectFor<T>(user: User, state: TState<T>, withMessageForState?: string): Promise<void> {
+        await this.setStateFor<T>(user, state);
+        await this.telegramService.redirectToHandler<T>(user, state, withMessageForState);
     }
 
     buttonList(buttons: Record<string, string>): Array<Array<string>> {

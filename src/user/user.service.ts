@@ -1,16 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import * as TelegramBot from 'node-telegram-bot-api';
-import { User } from './user.model';
-import { ECharacterOptions, EIntensiveOptions } from '../game/options/options.scenario';
-import { InjectModel } from '@nestjs/sequelize';
-import { Invite } from '../game/invite/invite.model';
+import { ECharacterOptions, EIntensiveOptions, User } from '../models/definition/user.model';
+import { Invite } from '../models/definition/invite.model';
+import { TState } from '../telegram/telegram.decorator';
+import { ModelsService } from '../models/models.service';
 
 @Injectable()
 export class UserService {
-    constructor(
-        @InjectModel(User) private userModel: typeof User,
-        @InjectModel(Invite) private inviteModel: typeof Invite,
-    ) {}
+    private readonly userModel: typeof User;
+    private readonly inviteModel: typeof Invite;
+
+    constructor(private modelsService: ModelsService) {
+        this.userModel = this.modelsService.userModel;
+        this.inviteModel = this.modelsService.inviteModel;
+    }
 
     async getUser(message: TelegramBot.Message): Promise<User> {
         const tgValues: Partial<User> = {
@@ -41,7 +44,7 @@ export class UserService {
         return user;
     }
 
-    async setState(user: User, state: string): Promise<void> {
-        await this.userModel.update({ state }, { where: { userId: user.userId } });
+    async setState<T>(user: User, state: TState<T>): Promise<void> {
+        await this.userModel.update({ state: `${state[0].name}->${state[1]}` }, { where: { userId: user.userId } });
     }
 }

@@ -1,8 +1,12 @@
 import { TgController, TgStateHandler } from '../../telegram/telegram.decorator';
 import { TelegramContext } from '../../telegram/telegram.context';
-import { User } from '../../user/user.model';
+import { User } from '../../models/definition/user.model';
 import { TelegramService } from '../../telegram/telegram.service';
-import { InjectModel } from '@nestjs/sequelize';
+import { RootScenario } from '../root/root.scenario';
+import { LazyModuleLoader } from '@nestjs/core';
+import { OnModuleInit } from '@nestjs/common';
+import { TelegramModule } from '../../telegram/telegram.module';
+import { ModelsService } from '../../models/models.service';
 
 enum EAdminOptions {
     DEACTIVATE = 'Деактивировать',
@@ -19,14 +23,25 @@ enum ECancelButton {
     CANCEL = '(отменить)',
 }
 
-@TgController('admin')
-export class AdminScenario {
-    constructor(@InjectModel(User) private userModel: typeof User, private telegramService: TelegramService) {}
+@TgController()
+export class AdminScenario implements OnModuleInit {
+    private readonly userModel: typeof User;
+    private telegramService: TelegramService;
+
+    constructor(private modelsService: ModelsService, private lazyModuleLoader: LazyModuleLoader) {
+        this.userModel = this.modelsService.userModel;
+    }
+
+    async onModuleInit(): Promise<void> {
+        const telegramRef = await this.lazyModuleLoader.load(() => TelegramModule);
+
+        this.telegramService = telegramRef.get(TelegramService);
+    }
 
     @TgStateHandler()
     async mainMenu(ctx: TelegramContext): Promise<void> {
         await ctx.send('Выберите меню...', ctx.buttonList(EAdminOptions));
-        await ctx.setState('admin->mainMenuSelect');
+        await ctx.setState<AdminScenario>([AdminScenario, 'mainMenuSelect']);
     }
 
     @TgStateHandler()
@@ -34,46 +49,46 @@ export class AdminScenario {
         switch (ctx.message) {
             case EAdminOptions.DEACTIVATE:
                 await ctx.send('Введите ник');
-                await ctx.setState('admin->deactivateUserInput');
+                await ctx.setState<AdminScenario>([AdminScenario, 'deactivateUserInput']);
                 break;
 
             case EAdminOptions.REACTIVATE:
                 await ctx.send('Введите ник');
-                await ctx.setState('admin->reactivateUserInput');
+                await ctx.setState<AdminScenario>([AdminScenario, 'reactivateUserInput']);
                 break;
 
             case EAdminOptions.SET_BAN:
                 await ctx.send('Введите ник и причину через пробел');
-                await ctx.setState('admin->setBanUserInput');
+                await ctx.setState<AdminScenario>([AdminScenario, 'setBanUserInput']);
                 break;
 
             case EAdminOptions.REMOVE_BAN:
                 await ctx.send('Введите ник');
-                await ctx.setState('admin->removeBanUserInput');
+                await ctx.setState<AdminScenario>([AdminScenario, 'removeBanUserInput']);
                 break;
 
             case EAdminOptions.DIRECT_SEND:
                 await ctx.send('Введите ник и сообщение через пробел');
-                await ctx.setState('admin->directSendInput');
+                await ctx.setState<AdminScenario>([AdminScenario, 'directSendInput']);
                 break;
 
             case EAdminOptions.MASS_SEND:
                 await ctx.send('Введите сообщение', ctx.buttonList(ECancelButton));
-                await ctx.setState('admin->massSendInput');
+                await ctx.setState<AdminScenario>([AdminScenario, 'massSendInput']);
                 break;
 
             case EAdminOptions.RESET_STATE:
                 await ctx.send('Введите ник');
-                await ctx.setState('admin->resetUserInput');
+                await ctx.setState<AdminScenario>([AdminScenario, 'resetUserInput']);
                 break;
 
             case EAdminOptions.BACK:
-                await ctx.redirect('root->root');
+                await ctx.redirect<RootScenario>([RootScenario, 'root']);
                 break;
 
             default:
                 await ctx.send('Такой опции нет...');
-                await ctx.redirect('admin->mainMenu');
+                await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
         }
     }
 
@@ -86,7 +101,7 @@ export class AdminScenario {
         }
 
         await ctx.send('Пользователь деактивирован');
-        await ctx.redirect('admin->mainMenu');
+        await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
         await ctx.sendFor(
             user,
             'Ваш аккаунт деактивирован администратором в ручную, ' +
@@ -104,7 +119,7 @@ export class AdminScenario {
         }
 
         await ctx.send('Пользователь снова активирован');
-        await ctx.redirect('admin->mainMenu');
+        await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
         await ctx.sendFor(user, 'Ваш аккаунт активирован администратором в ручную, игра для вас запущена!');
     }
 
@@ -121,7 +136,7 @@ export class AdminScenario {
         }
 
         await ctx.send('Пользователь забанен');
-        await ctx.redirect('admin->mainMenu');
+        await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
         await ctx.sendFor(user, 'Вы забанены! Причина: ' + banReason);
     }
 
@@ -134,13 +149,13 @@ export class AdminScenario {
         }
 
         await ctx.send('Пользователь разбанен');
-        await ctx.redirect('admin->mainMenu');
+        await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
         await ctx.sendFor(user, 'Вы разбанены!');
     }
 
     @TgStateHandler()
     async directSendInput(ctx: TelegramContext): Promise<void> {
-        const [username, message] = this.splitUsernameAndMessage(ctx);
+        /*const [username, message] = this.splitUsernameAndMessage(ctx);
         const user: User = await this.userModel.findOne({ where: { username } });
 
         if (user) {
@@ -150,13 +165,13 @@ export class AdminScenario {
             await ctx.send('Пользователь НЕ НАЙДЕН');
         }
 
-        await ctx.redirect('admin->mainMenu');
+        await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);*/
     }
 
     @TgStateHandler()
     async massSendInput(ctx: TelegramContext<ECancelButton | string>): Promise<void> {
-        if (ctx.message === ECancelButton.CANCEL) {
-            await ctx.redirect('admin->mainMenu');
+        /*if (ctx.message === ECancelButton.CANCEL) {
+            await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
             return;
         }
 
@@ -168,37 +183,38 @@ export class AdminScenario {
             await this.telegramService.sendText(user, ctx.message);
         }
 
-        await ctx.redirect('admin->mainMenu');
+        await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);*/
     }
 
     @TgStateHandler()
     async resetUserInput(ctx: TelegramContext): Promise<void> {
-        let username: string = this.normalizeUsername(ctx.message);
+        /*let username: string = this.normalizeUsername(ctx.message);
         const user: User = await this.userModel.findOne({ where: { username } });
 
         if (user) {
             await ctx.sendFor(user, 'Ваш диалог с ботом сброшен до главного меню!');
-            await ctx.redirectFor(user, 'root->mainMenu');
+            await ctx.redirectFor<RootScenario>(user, [RootScenario, 'mainMenu']);
             await ctx.send('Успешно!');
-            await ctx.redirect('admin->mainMenu');
+            await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
         } else {
             await ctx.send('Пользователь НЕ НАЙДЕН');
-        }
+        }      */
     }
 
     private async updateUser(ctx: TelegramContext, update: Partial<User>): Promise<User | false> {
-        let username: string = this.normalizeUsername(ctx.message);
+        /*let username: string = this.normalizeUsername(ctx.message);
         const user: User = await this.userModel.findOne({ where: { username } });
 
         if (!user) {
             await ctx.send('Пользователь НЕ НАЙДЕН');
-            await ctx.redirect('admin->mainMenu');
+            await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
             return false;
         }
 
         await user.update(update);
 
-        return user;
+        return user;    */
+        return;
     }
 
     private splitUsernameAndMessage(ctx: TelegramContext): [string, string] {

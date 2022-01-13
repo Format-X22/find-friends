@@ -1,13 +1,14 @@
 import { TgController, TgStateHandler } from '../../telegram/telegram.decorator';
 import { TelegramContext } from '../../telegram/telegram.context';
-import { Invite } from './invite.model';
-import { User } from '../../user/user.model';
+import { Invite } from '../../models/definition/invite.model';
+import { User } from '../../models/definition/user.model';
+import { RootScenario } from '../root/root.scenario';
 
 enum EInviteButtons {
     CANCEL = '(назад в меню)',
 }
 
-@TgController('invite')
+@TgController()
 export class InviteScenario {
     @TgStateHandler()
     async mainMenu(ctx: TelegramContext): Promise<void> {
@@ -21,14 +22,14 @@ export class InviteScenario {
                 (ctx.user.invites.map((invite) => '@' + invite.invitedUsername).join('\n') || '< пока никого >'),
             ctx.buttonList(EInviteButtons),
         );
-        await ctx.setState('invite->inviteUser');
+        await ctx.setState<InviteScenario>([InviteScenario, 'inviteUser']);
     }
 
     @TgStateHandler()
     async inviteUser(ctx: TelegramContext<EInviteButtons | string>): Promise<void> {
         switch (ctx.message) {
             case EInviteButtons.CANCEL:
-                await ctx.redirect('root->mainMenu');
+                await ctx.redirect<RootScenario>([RootScenario, 'mainMenu']);
                 break;
 
             default:
@@ -75,7 +76,7 @@ export class InviteScenario {
 
             await maybeInvitedUser.save();
             await ctx.sendFor(maybeInvitedUser, `Вас пригласил @${ctx.user.username}!`, [['Отлично!']]);
-            await ctx.redirectFor(maybeInvitedUser, 'root->root');
+            await ctx.redirectFor<RootScenario>(maybeInvitedUser, [RootScenario, 'root']);
         }
 
         await ctx.send('Пользователь успешно приглашен!\nВозможно пригласим кого-то ещё?');

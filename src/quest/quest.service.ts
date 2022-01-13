@@ -1,16 +1,14 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { quests } from './quest.data-index';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { User } from '../user/user.model';
 
 @Injectable()
 export class QuestService implements OnModuleInit {
     constructor() {}
 
     async onModuleInit(): Promise<void> {
-        for (const quest of quests) {
+        //for (const quest of quests) {
             //await this.questModel.updateOne({ humanId: quest.humanId }, quest, { upsert: true });
-        }
+        //}
     }
 
     async getUserQuestNames(): Promise<Array<string>> {

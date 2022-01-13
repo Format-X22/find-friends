@@ -1,6 +1,6 @@
 import { applyDecorators, Injectable } from '@nestjs/common';
 
-type TSavePath<T> = (statePath?: string) => T;
+type TSavePath<T> = () => T;
 type THandlersPoints = Set<string>;
 type THandlersByClass = Map<Function, THandlersPoints>;
 
@@ -9,13 +9,14 @@ type THandlerTuple = {
     handlerMethodName: string;
     isPhotoAllowed: boolean;
 };
+export type TState<T> = [any, keyof T];
 export type THandlers = Map<string, THandlerTuple>;
 
 const handlersByClass: THandlersByClass = new Map();
 const handlersWithPhotoByClass: THandlersByClass = new Map();
 export const handlers: THandlers = new Map();
 
-export const TgController: TSavePath<ClassDecorator> = (stateSection: string): ClassDecorator => {
+export const TgController: TSavePath<ClassDecorator> = (): ClassDecorator => {
     return applyDecorators(Injectable, (handlerClass: new () => object): void => {
         const targetHandlers: THandlersPoints = handlersByClass.get(handlerClass);
         const targetHandlersWithPhoto: THandlersPoints = handlersWithPhotoByClass.get(handlerClass);
@@ -25,7 +26,7 @@ export const TgController: TSavePath<ClassDecorator> = (stateSection: string): C
         }
 
         for (const handlerMethodName of targetHandlers) {
-            let state: string = `${stateSection}->${handlerMethodName}`;
+            let state: string = `${handlerClass.name}->${handlerMethodName}`;
             const isPhotoAllowed = targetHandlersWithPhoto?.has(handlerMethodName);
 
             handlers.set(state, {

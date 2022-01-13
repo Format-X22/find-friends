@@ -1,8 +1,8 @@
 import * as TelegramBot from 'node-telegram-bot-api';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { handlers } from './telegram.decorator';
+import { handlers, TState } from './telegram.decorator';
 import { ConfigService } from '@nestjs/config';
-import { User } from '../user/user.model';
+import { User } from '../models/definition/user.model';
 import { UserService } from '../user/user.service';
 import { ModuleRef } from '@nestjs/core';
 import { KeyboardButton } from 'node-telegram-bot-api';
@@ -51,7 +51,7 @@ export class TelegramService implements OnModuleInit {
         await this.bot.sendMessage(user.chatId, message, options);
     }
 
-    async redirectToHandler(user: User, state: string, message?: string): Promise<void> {
+    async redirectToHandler<T>(user: User, state: TState<T>, message?: string): Promise<void> {
         await this.tryHandle({ chat: { id: user.chatId, type: null } }, async (): Promise<void> => {
             const context: TelegramContext = new TelegramContext(
                 this.userService,
@@ -60,7 +60,7 @@ export class TelegramService implements OnModuleInit {
                 message,
                 this.admins.includes(user.username),
             );
-            const { handlerClass, handlerMethodName } = handlers.get(state);
+            const { handlerClass, handlerMethodName } = handlers.get(`${state[0].name}->${state[1]}`);
 
             this.moduleRef.get(handlerClass, { strict: false })[handlerMethodName](context);
         });
@@ -137,7 +137,7 @@ export class TelegramService implements OnModuleInit {
         let state: string = user.state;
 
         if (!user.state || message.text === '/start' || message.text === '/reset') {
-            state = 'root->root';
+            state = 'RootScenario->root';
         }
 
         const { handlerClass, handlerMethodName } = handlers.get(state);

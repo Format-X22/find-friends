@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { AdminScenario } from './admin.scenario';
-import { SequelizeModule } from '@nestjs/sequelize';
-import { User } from '../../user/user.model';
+import { ModelsModule } from '../../models/models.module';
 
 @Module({
-    imports: [SequelizeModule.forFeature([User])],
+    imports: [ModelsModule],
     providers: [AdminScenario],
     exports: [AdminScenario],
 })

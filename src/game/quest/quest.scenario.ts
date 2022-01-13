@@ -1,6 +1,7 @@
 import { TgController, TgStateHandler } from '../../telegram/telegram.decorator';
 import { TelegramContext } from '../../telegram/telegram.context';
 import { QuestService } from '../../quest/quest.service';
+import { RootScenario } from '../root/root.scenario';
 
 enum EBackButton {
     BACK = '(назад)',
@@ -18,7 +19,7 @@ enum ECancelNeedMoreButton {
     CANCEL_NEED_MORE = 'Вычеркните, подожду',
 }
 
-@TgController('quest')
+@TgController()
 export class QuestScenario {
     constructor(private questService: QuestService) {}
 
@@ -46,7 +47,7 @@ export class QuestScenario {
             extraButtons = { ...extraButtons, ...EBackButton };
 
             await ctx.send(message, ctx.buttonList(extraButtons));
-            await ctx.setState('quest->noQuestsSelect');
+            await ctx.setState<QuestScenario>([QuestScenario, 'noQuestsSelect']);
             return;
         }
 
@@ -65,7 +66,7 @@ export class QuestScenario {
                         ' Как только найдется человек, который тоже не хочет ждать - мы соединим вас вместе!',
                     ctx.buttonList(EBoringButton),
                 );
-                await ctx.setState('quest->handleBoringResult');
+                await ctx.setState<QuestScenario>([QuestScenario, 'handleBoringResult']);
 
                 break;
 
@@ -74,21 +75,21 @@ export class QuestScenario {
 
                 await ctx.user.save();
                 await ctx.send('Хорошо, вычеркиваю!', ctx.buttonList(EBoringButton));
-                await ctx.setState('quest->handleBoringResult');
+                await ctx.setState<QuestScenario>([QuestScenario, 'handleBoringResult']);
                 break;
 
             case EBackButton.BACK:
-                await ctx.redirect('root->root');
+                await ctx.redirect<RootScenario>([RootScenario, 'root']);
                 break;
 
             default:
                 await ctx.send('Ой, похоже среди кнопок не было такой, но ничего, сейчас открою главное меню...');
-                await ctx.redirect('root->root');
+                await ctx.redirect<RootScenario>([RootScenario, 'root']);
         }
     }
 
     @TgStateHandler()
     async handleBoringResult(ctx: TelegramContext<ENeedMoreButton & EBackButton>): Promise<void> {
-        await ctx.redirect('root->mainMenu');
+        await ctx.redirect<RootScenario>([RootScenario, 'mainMenu']);
     }
 }
