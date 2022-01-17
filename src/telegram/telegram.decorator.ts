@@ -38,7 +38,7 @@ export const TgController: TSavePath<ClassDecorator> = (): ClassDecorator => {
     });
 };
 
-export const TgStateHandler: TSavePath<MethodDecorator> = (statePoint?: string): MethodDecorator => {
+export const TgStateHandler: TSavePath<MethodDecorator> = (): MethodDecorator => {
     return (target: object, propertyKey: string): void => {
         let targetHandlers: THandlersPoints = handlersByClass.get(target.constructor);
 
@@ -48,11 +48,11 @@ export const TgStateHandler: TSavePath<MethodDecorator> = (statePoint?: string):
             handlersByClass.set(target.constructor, targetHandlers);
         }
 
-        targetHandlers.add(statePoint || propertyKey);
+        targetHandlers.add(propertyKey);
     };
 };
 
-export const TgAllowPhoto: TSavePath<MethodDecorator> = (statePoint?: string): MethodDecorator => {
+export const TgAllowPhoto: TSavePath<MethodDecorator> = (): MethodDecorator => {
     return (target: object, propertyKey: string): void => {
         let targetHandlersWithPhoto: THandlersPoints = handlersWithPhotoByClass.get(target.constructor);
 
@@ -62,6 +62,6 @@ export const TgAllowPhoto: TSavePath<MethodDecorator> = (statePoint?: string): M
             handlersWithPhotoByClass.set(target.constructor, targetHandlersWithPhoto);
         }
 
-        targetHandlersWithPhoto.add(statePoint || propertyKey);
+        targetHandlersWithPhoto.add(propertyKey);
     };
 };

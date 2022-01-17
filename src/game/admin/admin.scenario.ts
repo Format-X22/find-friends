@@ -7,6 +7,7 @@ import { LazyModuleLoader } from '@nestjs/core';
 import { OnModuleInit } from '@nestjs/common';
 import { TelegramModule } from '../../telegram/telegram.module';
 import { ModelsService } from '../../models/models.service';
+import { OnlyFor } from '../../user/user.decorator';
 
 enum EAdminOptions {
     DEACTIVATE = 'Деактивировать',
@@ -39,12 +40,14 @@ export class AdminScenario implements OnModuleInit {
     }
 
     @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
     async mainMenu(ctx: TelegramContext): Promise<void> {
         await ctx.send('Выберите меню...', ctx.buttonList(EAdminOptions));
         await ctx.setState<AdminScenario>([AdminScenario, 'mainMenuSelect']);
     }
 
     @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
     async mainMenuSelect(ctx: TelegramContext<EAdminOptions>): Promise<void> {
         switch (ctx.message) {
             case EAdminOptions.DEACTIVATE:
@@ -93,6 +96,7 @@ export class AdminScenario implements OnModuleInit {
     }
 
     @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
     async deactivateUserInput(ctx: TelegramContext): Promise<void> {
         const user = await this.updateUser(ctx, { isActive: false, state: 'root->root' });
 
@@ -111,6 +115,7 @@ export class AdminScenario implements OnModuleInit {
     }
 
     @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
     async reactivateUserInput(ctx: TelegramContext): Promise<void> {
         const user = await this.updateUser(ctx, { isActive: true, state: 'root->root' });
 
@@ -124,6 +129,7 @@ export class AdminScenario implements OnModuleInit {
     }
 
     @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
     async setBanUserInput(ctx: TelegramContext): Promise<void> {
         const [username, banReason] = this.splitUsernameAndMessage(ctx);
 
@@ -141,6 +147,7 @@ export class AdminScenario implements OnModuleInit {
     }
 
     @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
     async removeBanUserInput(ctx: TelegramContext): Promise<void> {
         const user = await this.updateUser(ctx, { isBanned: false, state: 'root->root' });
 
@@ -154,8 +161,9 @@ export class AdminScenario implements OnModuleInit {
     }
 
     @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
     async directSendInput(ctx: TelegramContext): Promise<void> {
-        /*const [username, message] = this.splitUsernameAndMessage(ctx);
+        const [username, message] = this.splitUsernameAndMessage(ctx);
         const user: User = await this.userModel.findOne({ where: { username } });
 
         if (user) {
@@ -165,12 +173,13 @@ export class AdminScenario implements OnModuleInit {
             await ctx.send('Пользователь НЕ НАЙДЕН');
         }
 
-        await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);*/
+        await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
     }
 
     @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
     async massSendInput(ctx: TelegramContext<ECancelButton | string>): Promise<void> {
-        /*if (ctx.message === ECancelButton.CANCEL) {
+        if (ctx.message === ECancelButton.CANCEL) {
             await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
             return;
         }
@@ -183,12 +192,13 @@ export class AdminScenario implements OnModuleInit {
             await this.telegramService.sendText(user, ctx.message);
         }
 
-        await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);*/
+        await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
     }
 
     @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
     async resetUserInput(ctx: TelegramContext): Promise<void> {
-        /*let username: string = this.normalizeUsername(ctx.message);
+        let username: string = this.normalizeUsername(ctx.message);
         const user: User = await this.userModel.findOne({ where: { username } });
 
         if (user) {
@@ -198,11 +208,11 @@ export class AdminScenario implements OnModuleInit {
             await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
         } else {
             await ctx.send('Пользователь НЕ НАЙДЕН');
-        }      */
+        }
     }
 
     private async updateUser(ctx: TelegramContext, update: Partial<User>): Promise<User | false> {
-        /*let username: string = this.normalizeUsername(ctx.message);
+        let username: string = this.normalizeUsername(ctx.message);
         const user: User = await this.userModel.findOne({ where: { username } });
 
         if (!user) {
@@ -213,8 +223,7 @@ export class AdminScenario implements OnModuleInit {
 
         await user.update(update);
 
-        return user;    */
-        return;
+        return user;
     }
 
     private splitUsernameAndMessage(ctx: TelegramContext): [string, string] {

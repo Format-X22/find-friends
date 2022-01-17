@@ -20,6 +20,8 @@ export enum EIntensiveOptions {
 
 @Table
 export class User extends Model {
+    isAdmin: boolean;
+
     @Unique
     @Column(DataType.INTEGER)
     userId: number;

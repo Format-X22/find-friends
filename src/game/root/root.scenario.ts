@@ -4,6 +4,7 @@ import { OptionsScenario } from '../options/options.scenario';
 import { QuestScenario } from '../quest/quest.scenario';
 import { AdminScenario } from '../admin/admin.scenario';
 import { InviteScenario } from '../invite/invite.scenario';
+import { OnlyFor } from '../../user/user.decorator';
 
 enum ERootButtons {
     QUESTS = 'Задания',
@@ -53,34 +54,46 @@ export class RootScenario {
 
     @TgStateHandler()
     async mainMenuSelect(ctx: TelegramContext<ERootButtons & ERootAdminButtons & EResumeButton>): Promise<void> {
-        switch (ctx.message) {
-            case ERootButtons.OPTIONS:
-                await ctx.redirect<OptionsScenario>([OptionsScenario, 'optionsList']);
-                break;
+        const msg = ctx.message;
+        const user = ctx.user;
 
-            case ERootButtons.QUESTS:
-                await ctx.redirect<QuestScenario>([QuestScenario, 'questList']);
-                break;
-
-            case ERootButtons.NEWS:
-                await ctx.redirect<RootScenario>([RootScenario, 'showNews']);
-                break;
-
-            case ERootAdminButtons.ADMIN:
+        if (user.isAdmin) {
+            if (msg === ERootAdminButtons.ADMIN) {
                 await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
-                break;
-
-            case EResumeButton.RESUME:
-                await ctx.redirect<RootScenario>([RootScenario, 'resume']);
-                break;
-
-            case ERootButtons.INVITE:
-                await ctx.redirect<InviteScenario>([InviteScenario, 'mainMenu']);
-                break;
-
-            default:
-                await ctx.send('Похоже такой настройки нет...');
+                return;
+            }
         }
+
+        if (user.isActive) {
+            if (msg === ERootButtons.OPTIONS) {
+                await ctx.redirect<OptionsScenario>([OptionsScenario, 'optionsList']);
+                return;
+            }
+
+            if (msg === ERootButtons.QUESTS) {
+                await ctx.redirect<QuestScenario>([QuestScenario, 'questList']);
+                return;
+            }
+        }
+
+        if (!user.isActive) {
+            if (msg === EResumeButton.RESUME) {
+                await ctx.redirect<RootScenario>([RootScenario, 'resume']);
+                return;
+            }
+        }
+
+        if (msg === ERootButtons.NEWS) {
+            await ctx.redirect<RootScenario>([RootScenario, 'showNews']);
+            return;
+        }
+
+        if (msg === ERootButtons.INVITE) {
+            await ctx.redirect<InviteScenario>([InviteScenario, 'mainMenu']);
+            return;
+        }
+
+        await ctx.send('Похоже такой настройки нет...');
     }
 
     @TgStateHandler()
@@ -90,6 +103,7 @@ export class RootScenario {
     }
 
     @TgStateHandler()
+    @OnlyFor({ isActive: false })
     async resume(ctx: TelegramContext): Promise<void> {
         ctx.user.isActive = true;
 

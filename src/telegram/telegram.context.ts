@@ -2,6 +2,7 @@ import { UserService } from '../user/user.service';
 import { TelegramService } from './telegram.service';
 import { User } from '../models/definition/user.model';
 import { TState } from './telegram.decorator';
+import { RootScenario } from '../game/root/root.scenario';
 
 export class TelegramContext<TInboundMessage = string> {
     constructor(
@@ -10,7 +11,22 @@ export class TelegramContext<TInboundMessage = string> {
         public user: User,
         public message: TInboundMessage,
         public isAdmin: boolean,
-    ) {}
+    ) {
+        this.user.isAdmin = this.isAdmin;
+    }
+
+    async notAccessible(flags: Partial<User>): Promise<boolean> {
+        for (const key of Object.keys(flags)) {
+            if (flags[key] != this.user[key]) {
+                await this.send('Этот пункт меню сейчас недоступен...');
+                await this.redirect<RootScenario>([RootScenario, 'mainMenu']);
+
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     async send(message: string, buttons?: Array<Array<string>> | false): Promise<void> {
         await this.sendFor(this.user, message, buttons);

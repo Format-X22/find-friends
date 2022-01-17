@@ -2,6 +2,7 @@ import { TgController, TgStateHandler } from '../../telegram/telegram.decorator'
 import { TelegramContext } from '../../telegram/telegram.context';
 import { QuestService } from '../../quest/quest.service';
 import { RootScenario } from '../root/root.scenario';
+import { OnlyFor } from '../../user/user.decorator';
 
 enum EBackButton {
     BACK = '(назад)',
@@ -24,6 +25,7 @@ export class QuestScenario {
     constructor(private questService: QuestService) {}
 
     @TgStateHandler()
+    @OnlyFor({ isActive: true })
     async questList(ctx: TelegramContext): Promise<void> {
         const questNames: Array<string> = await this.questService.getUserQuestNames();
         let message: string = 'Похоже что доступных заданий нет...';
@@ -55,6 +57,7 @@ export class QuestScenario {
     }
 
     @TgStateHandler()
+    @OnlyFor({ isActive: true })
     async noQuestsSelect(ctx: TelegramContext<ENeedMoreButton & EBackButton>): Promise<void> {
         switch (ctx.message) {
             case ENeedMoreButton.NEED_MORE:
@@ -89,6 +92,7 @@ export class QuestScenario {
     }
 
     @TgStateHandler()
+    @OnlyFor({ isActive: true })
     async handleBoringResult(ctx: TelegramContext<ENeedMoreButton & EBackButton>): Promise<void> {
         await ctx.redirect<RootScenario>([RootScenario, 'mainMenu']);
     }

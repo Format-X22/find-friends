@@ -2,6 +2,7 @@ import { TgController, TgStateHandler } from '../../telegram/telegram.decorator'
 import { TelegramContext } from '../../telegram/telegram.context';
 import { RootScenario } from '../root/root.scenario';
 import { ECharacterOptions, EIntensiveOptions } from '../../models/definition/user.model';
+import { OnlyFor } from '../../user/user.decorator';
 
 enum EOptionsList {
     CHARACTER = 'Характер заданий',
@@ -30,6 +31,7 @@ enum EAboutOptions {
 @TgController()
 export class OptionsScenario {
     @TgStateHandler()
+    @OnlyFor({ isActive: true })
     async optionsList(ctx: TelegramContext): Promise<void> {
         await ctx.send(
             'Отлично, тут можно настроить игру под себя, ну и рассказать другим чуть-чуть о себе.' +
@@ -44,6 +46,7 @@ export class OptionsScenario {
     }
 
     @TgStateHandler()
+    @OnlyFor({ isActive: true })
     async optionsSelect(ctx: TelegramContext<EOptionsList>): Promise<void> {
         switch (ctx.message) {
             case EOptionsList.CHARACTER:
@@ -96,6 +99,7 @@ export class OptionsScenario {
     }
 
     @TgStateHandler()
+    @OnlyFor({ isActive: true })
     async characterSelect(ctx: TelegramContext<ECharacterOptions & ECharacterOptionsExtraMenu>): Promise<void> {
         switch (ctx.message) {
             case ECharacterOptions.FULL_FUN:
@@ -121,6 +125,7 @@ export class OptionsScenario {
     }
 
     @TgStateHandler()
+    @OnlyFor({ isActive: true })
     async intensiveSelect(ctx: TelegramContext<EIntensiveOptions & EIntensiveOptionsExtraMenu>): Promise<void> {
         switch (ctx.message) {
             case EIntensiveOptions.MAX:
@@ -150,6 +155,7 @@ export class OptionsScenario {
     }
 
     @TgStateHandler()
+    @OnlyFor({ isActive: true })
     async aboutInput(ctx: TelegramContext<EAboutOptions | string>): Promise<void> {
         switch (ctx.message) {
             case EAboutOptions.CANCEL:
