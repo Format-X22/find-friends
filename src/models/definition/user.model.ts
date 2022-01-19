@@ -68,9 +68,9 @@ export class User extends Model {
     @Column(DataType.STRING(2048))
     about: string;
 
-    // TODO In separate table
-    //alreadyPlaysWith: Array<User>;
-
     @HasMany(() => Invite)
     invites: Array<Invite>;
+    
+    @Column(DataType.FLOAT)
+    rating: number;
 }

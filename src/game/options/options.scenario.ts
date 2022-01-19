@@ -26,8 +26,6 @@ enum EAboutOptions {
     CLEAR = '(стереть)',
 }
 
-// TODO Validation
-
 @TgController()
 export class OptionsScenario {
     @TgStateHandler()
