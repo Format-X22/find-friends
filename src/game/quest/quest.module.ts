@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { QuestScenario } from './quest.scenario';
-import { QuestModule as QuestModuleLegacy } from '../../quest/quest.module';
+import { QuestService } from './quest.service';
 
 @Module({
-    imports: [QuestModuleLegacy],
-    providers: [QuestScenario],
+    imports: [],
+    providers: [QuestScenario, QuestService],
     exports: [QuestScenario],
 })
 export class QuestModule {}

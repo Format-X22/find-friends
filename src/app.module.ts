@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TelegramModule } from './telegram/telegram.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from './user/user.module';
-import { QuestModule } from './quest/quest.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { User } from './models/definition/user.model';
@@ -36,7 +35,6 @@ import { ModelsModule } from './models/models.module';
         }),
         UserModule,
         TelegramModule,
-        QuestModule,
         ModelsModule,
     ],
     controllers: [],
