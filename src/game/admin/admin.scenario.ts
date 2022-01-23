@@ -17,6 +17,9 @@ enum EAdminOptions {
     DIRECT_SEND = 'Написать пользователю',
     MASS_SEND = 'Массовая рассылка',
     RESET_STATE = 'Сбросить стейт',
+    QUEST_FOR_MODERATION_LIST = 'Список заданий на модерацию',
+    REJECT_QUEST_REQUEST = 'Отменить задание на модерации',
+    APPROVE_QUEST_REQUEST = 'Принять задание на модерации',
     BACK = '(назад)',
 }
 
@@ -83,6 +86,20 @@ export class AdminScenario implements OnModuleInit {
             case EAdminOptions.RESET_STATE:
                 await ctx.send('Введите ник');
                 await ctx.setState<AdminScenario>([AdminScenario, 'resetUserInput']);
+                break;
+
+            case EAdminOptions.QUEST_FOR_MODERATION_LIST:
+                await ctx.redirect<AdminScenario>([AdminScenario, 'getQuestForModerationList']);
+                break;
+
+            case EAdminOptions.REJECT_QUEST_REQUEST:
+                await ctx.send('Введите id запроса и причину через пробел');
+                await ctx.setState<AdminScenario>([AdminScenario, 'rejectQuestRequest']);
+                break;
+
+            case EAdminOptions.APPROVE_QUEST_REQUEST:
+                await ctx.send('Введите id запроса');
+                await ctx.setState<AdminScenario>([AdminScenario, 'approveQuestRequest']);
                 break;
 
             case EAdminOptions.BACK:
@@ -209,6 +226,101 @@ export class AdminScenario implements OnModuleInit {
         } else {
             await ctx.send('Пользователь НЕ НАЙДЕН');
         }
+    }
+
+    @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
+    async getQuestForModerationList(ctx: TelegramContext): Promise<void> {
+        const requests = await this.modelsService.questRequest.findAll({
+            where: {
+                isModerated: false,
+            },
+            include: [User],
+        });
+
+        const message = requests
+            .map((request) => `${request.id} - @${request.user.username} - ${request.url}`)
+            .join('\n');
+
+        await ctx.send(message);
+        await ctx.setState<AdminScenario>([AdminScenario, 'mainMenuSelect']);
+    }
+
+    @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
+    async rejectQuestRequest(ctx: TelegramContext<ECancelButton | string>): Promise<void> {
+        if (ctx.message === ECancelButton.CANCEL) {
+            await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
+            return;
+        }
+
+        const messageSplit = ctx.message.trim().split(' ');
+        const id = Number(messageSplit[0]);
+        const reason = messageSplit.slice(1, messageSplit.length).join(' ');
+
+        if (!id || !reason) {
+            await ctx.send('Не валидные параметры');
+            return;
+        }
+
+        const request = await this.modelsService.questRequest.findOne({
+            where: { id, isModerated: false },
+            include: [User],
+        });
+
+        if (!request) {
+            await ctx.send('Не найдено');
+            return;
+        }
+
+        request.isModerated = true;
+        request.cancelReason = reason;
+
+        await request.save();
+        await ctx.send('Успешно!');
+        await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
+        await ctx.sendFor(
+            request.user,
+            `Ваше задание ${request.url} отклонено по причине "${reason}".` +
+                ' Но не переживайте - чуть-чуть доработать и можно отправить ещё раз :)',
+        );
+    }
+
+    @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
+    async approveQuestRequest(ctx: TelegramContext<ECancelButton | string>): Promise<void> {
+        if (ctx.message === ECancelButton.CANCEL) {
+            await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
+            return;
+        }
+
+        const id = Number(ctx.message.trim());
+
+        if (!id) {
+            await ctx.send('Не валидные параметры');
+            return;
+        }
+
+        const request = await this.modelsService.questRequest.findOne({
+            where: { id, isModerated: false },
+            include: [User],
+        });
+
+        if (!request) {
+            await ctx.send('Не найдено');
+            return;
+        }
+
+        request.isModerated = true;
+        request.isApproved = true;
+
+        await request.save();
+        await ctx.send('Успешно!');
+        await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
+        await ctx.sendFor(
+            request.user,
+            `Ваше задание ${request.url} принято! 🥳 \nСкоро оно появится среди заданий для игроков.`,
+        );
     }
 
     private async updateUser(ctx: TelegramContext, update: Partial<User>): Promise<User | false> {

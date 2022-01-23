@@ -1,7 +1,15 @@
-import { Column, DataType, Model, Table } from 'sequelize-typescript';
+import { BelongsTo, Column, DataType, ForeignKey, HasOne, Model, Table } from 'sequelize-typescript';
+import { User } from './user.model';
 
 @Table
 export class Quest extends Model {
+    @ForeignKey(() => User)
+    @Column
+    userId: number;
+
+    @HasOne(() => User, 'id')
+    user: User;
+
     @Column(DataType.STRING(256))
     name: string;
 
@@ -15,20 +23,33 @@ export class Quest extends Model {
     isBlitz: boolean;
 
     @Column(DataType.BOOLEAN)
-    isModerated: boolean;
-
-    @Column(DataType.STRING(512))
-    cancelReason: string;
-
-    @Column(DataType.BOOLEAN)
-    isExperimental: boolean;
-
-    @Column(DataType.BOOLEAN)
-    isInGame: boolean;
+    isActive: boolean;
 
     @Column(DataType.FLOAT)
     rating: number;
 
     @Column(DataType.INTEGER)
     playedCount: number;
+}
+
+@Table
+export class QuestRequest extends Model {
+    @ForeignKey(() => User)
+    @Column
+    userId: number;
+
+    @BelongsTo(() => User, 'userId')
+    user: User;
+
+    @Column(DataType.STRING(256))
+    url: string;
+
+    @Column(DataType.BOOLEAN)
+    isModerated: boolean;
+
+    @Column(DataType.STRING(512))
+    cancelReason: string;
+
+    @Column(DataType.BOOLEAN)
+    isApproved: boolean;
 }

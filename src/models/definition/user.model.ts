@@ -70,7 +70,7 @@ export class User extends Model {
 
     @HasMany(() => Invite)
     invites: Array<Invite>;
-    
+
     @Column(DataType.FLOAT)
     rating: number;
 }
