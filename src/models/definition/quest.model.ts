@@ -7,7 +7,7 @@ export class Quest extends Model {
     @Column
     userId: number;
 
-    @HasOne(() => User, 'id')
+    @BelongsTo(() => User, 'userId')
     user: User;
 
     @Column(DataType.STRING(256))

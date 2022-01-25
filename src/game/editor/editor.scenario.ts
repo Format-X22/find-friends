@@ -40,7 +40,7 @@ export class EditorScenario {
                 await ctx.redirect<RootScenario>([RootScenario, 'mainMenu']);
                 break;
             default:
-                await this.modelsService.questRequest.create({
+                await this.modelsService.questRequestModel.create({
                     url: ctx.message,
                     userId: ctx.user.id,
                     isModerated: false,

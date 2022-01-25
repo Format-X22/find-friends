@@ -10,6 +10,6 @@ export class ModelsService {
         @InjectModel(User) public userModel: typeof User,
         @InjectModel(Invite) public inviteModel: typeof Invite,
         @InjectModel(Quest) public questModel: typeof Quest,
-        @InjectModel(QuestRequest) public questRequest: typeof QuestRequest,
+        @InjectModel(QuestRequest) public questRequestModel: typeof QuestRequest,
     ) {}
 }

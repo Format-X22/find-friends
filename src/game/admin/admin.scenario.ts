@@ -1,6 +1,6 @@
 import { TgController, TgStateHandler } from '../../telegram/telegram.decorator';
 import { TelegramContext } from '../../telegram/telegram.context';
-import { User } from '../../models/definition/user.model';
+import { ECharacterOptions, User } from '../../models/definition/user.model';
 import { TelegramService } from '../../telegram/telegram.service';
 import { RootScenario } from '../root/root.scenario';
 import { LazyModuleLoader } from '@nestjs/core';
@@ -8,32 +8,42 @@ import { OnModuleInit } from '@nestjs/common';
 import { TelegramModule } from '../../telegram/telegram.module';
 import { ModelsService } from '../../models/models.service';
 import { OnlyFor } from '../../user/user.decorator';
+import { Quest, QuestRequest } from '../../models/definition/quest.model';
+import { BackIfCancel } from './admin.decorator';
 
 enum EAdminOptions {
-    DEACTIVATE = 'Деактивировать',
-    REACTIVATE = 'Снова активировать',
-    SET_BAN = 'Забанить',
-    REMOVE_BAN = 'Разбанить',
+    DEACTIVATE = 'Деактивировать пользователя',
+    REACTIVATE = 'Снова активировать пользователя',
+    SET_BAN = 'Забанить пользователя',
+    REMOVE_BAN = 'Разбанить пользователя',
     DIRECT_SEND = 'Написать пользователю',
     MASS_SEND = 'Массовая рассылка',
-    RESET_STATE = 'Сбросить стейт',
+    RESET_STATE = 'Сбросить стейт пользователя',
     QUEST_FOR_MODERATION_LIST = 'Список заданий на модерацию',
     REJECT_QUEST_REQUEST = 'Отменить задание на модерации',
     APPROVE_QUEST_REQUEST = 'Принять задание на модерации',
+    QUEST_LIST = 'Список квестов',
+    ADD_QUEST = 'Добавить квест',
+    DEACTIVATE_QUEST = 'Деактивировать квест',
+    ACTIVATE_QUEST = 'Активировать квест',
     BACK = '(назад)',
 }
 
-enum ECancelButton {
+export enum ECancelButton {
     CANCEL = '(отменить)',
 }
 
 @TgController()
 export class AdminScenario implements OnModuleInit {
     private readonly userModel: typeof User;
+    private readonly questRequestModel: typeof QuestRequest;
+    private readonly questModel: typeof Quest;
     private telegramService: TelegramService;
 
     constructor(private modelsService: ModelsService, private lazyModuleLoader: LazyModuleLoader) {
         this.userModel = this.modelsService.userModel;
+        this.questRequestModel = this.modelsService.questRequestModel;
+        this.questModel = this.modelsService.questModel;
     }
 
     async onModuleInit(): Promise<void> {
@@ -100,6 +110,29 @@ export class AdminScenario implements OnModuleInit {
             case EAdminOptions.APPROVE_QUEST_REQUEST:
                 await ctx.send('Введите id запроса');
                 await ctx.setState<AdminScenario>([AdminScenario, 'approveQuestRequest']);
+                break;
+
+            case EAdminOptions.QUEST_LIST:
+                await ctx.redirect<AdminScenario>([AdminScenario, 'getQuestList']);
+                break;
+
+            case EAdminOptions.ADD_QUEST:
+                await ctx.send(
+                    'Отправь квест в формате username, name, url, characterId, isBlitz' +
+                        ' через перенос строки, при этом isBlitz как "да"/"нет"',
+                    ctx.buttonList(ECancelButton),
+                );
+                await ctx.setState<AdminScenario>([AdminScenario, 'addQuest']);
+                break;
+
+            case EAdminOptions.DEACTIVATE_QUEST:
+                await ctx.send('Введите id квеста', ctx.buttonList(ECancelButton));
+                await ctx.setState<AdminScenario>([AdminScenario, 'deactivateQuest']);
+                break;
+
+            case EAdminOptions.ACTIVATE_QUEST:
+                await ctx.send('Введите id квеста', ctx.buttonList(ECancelButton));
+                await ctx.setState<AdminScenario>([AdminScenario, 'activateQuest']);
                 break;
 
             case EAdminOptions.BACK:
@@ -195,12 +228,8 @@ export class AdminScenario implements OnModuleInit {
 
     @TgStateHandler()
     @OnlyFor({ isAdmin: true })
+    @BackIfCancel()
     async massSendInput(ctx: TelegramContext<ECancelButton | string>): Promise<void> {
-        if (ctx.message === ECancelButton.CANCEL) {
-            await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
-            return;
-        }
-
         await ctx.send('Отправляю...');
 
         const users: Array<User> = await this.userModel.findAll({ where: { isActive: true, isBanned: false } });
@@ -231,7 +260,7 @@ export class AdminScenario implements OnModuleInit {
     @TgStateHandler()
     @OnlyFor({ isAdmin: true })
     async getQuestForModerationList(ctx: TelegramContext): Promise<void> {
-        const requests = await this.modelsService.questRequest.findAll({
+        const requests = await this.questRequestModel.findAll({
             where: {
                 isModerated: false,
             },
@@ -248,12 +277,8 @@ export class AdminScenario implements OnModuleInit {
 
     @TgStateHandler()
     @OnlyFor({ isAdmin: true })
+    @BackIfCancel()
     async rejectQuestRequest(ctx: TelegramContext<ECancelButton | string>): Promise<void> {
-        if (ctx.message === ECancelButton.CANCEL) {
-            await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
-            return;
-        }
-
         const messageSplit = ctx.message.trim().split(' ');
         const id = Number(messageSplit[0]);
         const reason = messageSplit.slice(1, messageSplit.length).join(' ');
@@ -263,7 +288,7 @@ export class AdminScenario implements OnModuleInit {
             return;
         }
 
-        const request = await this.modelsService.questRequest.findOne({
+        const request = await this.questRequestModel.findOne({
             where: { id, isModerated: false },
             include: [User],
         });
@@ -288,12 +313,8 @@ export class AdminScenario implements OnModuleInit {
 
     @TgStateHandler()
     @OnlyFor({ isAdmin: true })
+    @BackIfCancel()
     async approveQuestRequest(ctx: TelegramContext<ECancelButton | string>): Promise<void> {
-        if (ctx.message === ECancelButton.CANCEL) {
-            await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
-            return;
-        }
-
         const id = Number(ctx.message.trim());
 
         if (!id) {
@@ -301,7 +322,7 @@ export class AdminScenario implements OnModuleInit {
             return;
         }
 
-        const request = await this.modelsService.questRequest.findOne({
+        const request = await this.questRequestModel.findOne({
             where: { id, isModerated: false },
             include: [User],
         });
@@ -321,6 +342,124 @@ export class AdminScenario implements OnModuleInit {
             request.user,
             `Ваше задание ${request.url} принято! 🥳 \nСкоро оно появится среди заданий для игроков.`,
         );
+    }
+
+    @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
+    @BackIfCancel()
+    async getQuestList(ctx: TelegramContext): Promise<void> {
+        const quests = (await this.questModel.findAll({ include: [User] })) || [];
+        const message = quests
+            .sort((q) => (q.isActive ? -1 : 1))
+            .map((q) => {
+                const activeSymbol = q.isActive ? '✅' : '⏸';
+                const character = Object.values(ECharacterOptions)[q.character];
+                const rating = q.rating.toFixed(2);
+
+                return [
+                    `${activeSymbol} ⭐️ ${rating} - 🎮 ${q.playedCount}`,
+                    `🆔 ${q.id} - ${q.name}`,
+                    `🎭 ${character}`,
+                    `👤 @${q.user.username}`,
+                    `🔗 ${q.url}`,
+                ].join('\n');
+            })
+            .join('\n\n');
+
+        await ctx.send(message || 'Ни одного квеста!');
+        await ctx.setState<AdminScenario>([AdminScenario, 'mainMenuSelect']);
+    }
+
+    @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
+    @BackIfCancel()
+    async addQuest(ctx: TelegramContext): Promise<void> {
+        let [username, name, url, characterId, isBlitzText] = ctx.message.split('\n');
+
+        if (!username || !name || !url || !characterId || !isBlitzText) {
+            await ctx.send('Невалидные аргументы');
+            return;
+        }
+
+        username = username.trim();
+        name = name.trim();
+        url = url.trim();
+        characterId = characterId.trim();
+        isBlitzText = isBlitzText.trim();
+
+        if (username.startsWith('@')) {
+            username = username.slice(1, username.length);
+        }
+
+        const character = Number(characterId);
+        const isBlitz = isBlitzText === 'да';
+
+        const user = await this.userModel.findOne({ where: { username } });
+
+        if (!user) {
+            await ctx.send('Пользователь не найден');
+            return;
+        }
+
+        await this.questModel.create({
+            userId: user.id,
+            name,
+            url,
+            character,
+            isBlitz,
+            rating: 5,
+            playedCount: 0,
+            isActive: false,
+        });
+
+        await ctx.send('Успешно! Не забудь активировать когда нужно.');
+        await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
+    }
+
+    @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
+    @BackIfCancel()
+    async deactivateQuest(ctx: TelegramContext): Promise<void> {
+        const quest = await this.questModel.findOne({ where: { id: Number(ctx.message) } });
+
+        if (!quest) {
+            await ctx.send('Не найден');
+            return;
+        }
+
+        if (!quest.isActive) {
+            await ctx.send('Уже не активный!');
+            return;
+        }
+
+        quest.isActive = false;
+
+        await quest.save();
+        await ctx.send('Успешно!');
+        await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
+    }
+
+    @TgStateHandler()
+    @OnlyFor({ isAdmin: true })
+    @BackIfCancel()
+    async activateQuest(ctx: TelegramContext): Promise<void> {
+        const quest = await this.questModel.findOne({ where: { id: Number(ctx.message) } });
+
+        if (!quest) {
+            await ctx.send('Не найден');
+            return;
+        }
+
+        if (quest.isActive) {
+            await ctx.send('Уже активный!');
+            return;
+        }
+
+        quest.isActive = true;
+
+        await quest.save();
+        await ctx.send('Успешно!');
+        await ctx.redirect<AdminScenario>([AdminScenario, 'mainMenu']);
     }
 
     private async updateUser(ctx: TelegramContext, update: Partial<User>): Promise<User | false> {
