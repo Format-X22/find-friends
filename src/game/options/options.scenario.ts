@@ -197,6 +197,6 @@ export class OptionsScenario {
         ctx.user.isActive = false;
 
         await ctx.user.save();
-        await ctx.redirect<RootScenario>([RootScenario, 'root']);
+        await ctx.redirect<RootScenario>([RootScenario, 'mainMenu']);
     }
 }

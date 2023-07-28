@@ -4,12 +4,11 @@ import { InviteModule } from './invite/invite.module';
 import { OptionsModule } from './options/options.module';
 import { PayModule } from './pay/pay.module';
 import { RootModule } from './root/root.module';
-import { EditorModule } from './editor/editor.module';
 import { QuestModule } from './quest/quest.module';
 
 @Global()
 @Module({
-    imports: [QuestModule, AdminModule, InviteModule, OptionsModule, PayModule, RootModule, EditorModule],
+    imports: [QuestModule, AdminModule, InviteModule, OptionsModule, PayModule, RootModule],
     providers: [],
 })
 export class GameModule {}

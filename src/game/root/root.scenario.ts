@@ -5,14 +5,12 @@ import { QuestScenario } from '../quest/quest.scenario';
 import { AdminScenario } from '../admin/admin.scenario';
 import { InviteScenario } from '../invite/invite.scenario';
 import { OnlyFor } from '../../user/user.decorator';
-import { EditorScenario } from '../editor/editor.scenario';
 
 enum ERootButtons {
     QUESTS = 'Задания',
     OPTIONS = 'Настройки',
     NEWS = 'Новости и объявления',
     INVITE = 'Инвайты',
-    EDITOR = 'Для творцов',
 }
 
 enum ERootAdminButtons {
@@ -94,11 +92,6 @@ export class RootScenario {
             return;
         }
 
-        if (msg === ERootButtons.EDITOR) {
-            await ctx.redirect<EditorScenario>([EditorScenario, 'mainMenu']);
-            return;
-        }
-
         await ctx.send('Похоже такой настройки нет...');
     }
 
@@ -113,8 +106,9 @@ export class RootScenario {
     async resume(ctx: TelegramContext): Promise<void> {
         ctx.user.isActive = true;
 
+        await ctx.send('Игра запущена! 🥳\nВеселье начинается 😉');
         await ctx.user.save();
-        await ctx.redirect<RootScenario>([RootScenario, 'root']);
+        await ctx.redirect<RootScenario>([RootScenario, 'mainMenu']);
     }
 
     private makeMainMenuButtons(ctx: TelegramContext): Record<string, string> {
