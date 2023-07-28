@@ -45,6 +45,6 @@ export class UserService {
     }
 
     async setState<T>(user: User, state: TState<T>): Promise<void> {
-        await this.userModel.update({ state: `${state[0].name}->${state[1]}` }, { where: { userId: user.userId } });
+        await this.userModel.update({ state: `${state[0].name}->${String(state[1])}` }, { where: { userId: user.userId } });
     }
 }

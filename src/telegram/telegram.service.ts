@@ -1,5 +1,5 @@
 import * as TelegramBot from 'node-telegram-bot-api';
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnApplicationBootstrap } from '@nestjs/common';
 import { handlers, TState } from './telegram.decorator';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../models/definition/user.model';
@@ -9,14 +9,18 @@ import { KeyboardButton } from 'node-telegram-bot-api';
 import { TelegramContext } from './telegram.context';
 
 @Injectable()
-export class TelegramService implements OnModuleInit {
+export class TelegramService implements OnApplicationBootstrap {
     private readonly logger: Logger = new Logger(TelegramService.name);
     private bot: TelegramBot;
     private admins: Array<string>;
 
-    constructor(private configService: ConfigService, private userService: UserService, private moduleRef: ModuleRef) {}
+    constructor(
+        private configService: ConfigService,
+        private userService: UserService,
+        private moduleRef: ModuleRef,
+    ) {}
 
-    onModuleInit(): void {
+    onApplicationBootstrap(): void {
         this.bot = new TelegramBot(this.configService.get('FF_TG_KEY'), { polling: true });
         this.admins = JSON.parse(this.configService.get('FF_ADMINS'));
 
@@ -60,7 +64,7 @@ export class TelegramService implements OnModuleInit {
                 message,
                 this.admins.includes(user.username),
             );
-            const { handlerClass, handlerMethodName } = handlers.get(`${state[0].name}->${state[1]}`);
+            const { handlerClass, handlerMethodName } = handlers.get(`${state[0].name}->${String(state[1])}`);
 
             this.moduleRef.get(handlerClass, { strict: false })[handlerMethodName](context);
         });
@@ -69,14 +73,16 @@ export class TelegramService implements OnModuleInit {
     private async handleAnyMessage(message: TelegramBot.Message, metadata: TelegramBot.Metadata): Promise<void> {
         const user: User = await this.userService.getUser(message);
 
-        if (user.isBanned) {
-            await this.sendBanMessage(message);
-            return;
-        }
+        if (!this.admins.includes(message.from.username)) {
+            if (user.isBanned) {
+                await this.sendBanMessage(message);
+                return;
+            }
 
-        if (!user.isInvited) {
-            await this.sendInviteMessage(message);
-            return;
+            if (!user.isInvited) {
+                await this.sendInviteMessage(message);
+                return;
+            }
         }
 
         switch (metadata.type) {
